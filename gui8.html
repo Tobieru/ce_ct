@@ -219,6 +219,7 @@ let isTimerOn = false;
 let currentPracticeSession = null;
 let lastPracticeClosed = 0;
 let multiSelection = new Set();
+let materialsTab = 'score';
 let infinitePracticeSkillId = null;
 let infinitePracticeTopicLabel = null;
 let infinitePracticeTitle = '';
@@ -246,12 +247,135 @@ const SKILL_LABELS = {
   'exponential-inequality-smallest-integer': 'Показательные неравенства'
 };
 
-function getTopicLabel(category) {
-  return String(category || '').replace(/\s*\(ЦЭ\/ЦТ\s+\d{4}\)$/i, '').trim() || 'Другие темы';
+const SKILL_TOPICS = {
+  'fraction-to-natural-gt1': 'Дроби и числовые выражения',
+  'triangle-true-statement': 'Геометрия',
+  'rational-inequality-x2-over-a-x': 'Неравенства',
+  'exponential-inequality-smallest-integer': 'Неравенства',
+  'log-sum-product-same-base': 'Логарифмы',
+  'log-equation-product-times': 'Логарифмы',
+  'linear-parallel-slope': 'Функции',
+  'function-parity-neither': 'Функции',
+  'intervals-true-statements': 'Числовые промежутки',
+  'expression-sense-at-negative': 'Корни и область определения',
+  'gcd-candy-sets': 'Делимость и числа',
+  'division-remainder-formula': 'Делимость и числа',
+  'sum-multiples-in-interval': 'Делимость и числа',
+  'quadratic-product-of-roots': 'Квадратные уравнения',
+  'purchase-change-kopecks': 'Текстовые задачи',
+  'trig-zero-argument': 'Тригонометрия',
+  'arcsin-expression-value': 'Тригонометрия'
+};
+
+function getTopicLabel(category, skillId = null) {
+  if (skillId && SKILL_TOPICS[skillId]) return SKILL_TOPICS[skillId];
+  const raw = String(category || '').replace(/\s*\(ЦЭ\/ЦТ\s+\d{4}\)$/i, '').trim();
+  if (/обратные тригонометрические|^тригонометрия/i.test(raw)) return 'Тригонометрия';
+  if (/логарифм/i.test(raw)) return 'Логарифмы';
+  if (/неравенств/i.test(raw)) return 'Неравенства';
+  if (/линейная функция|ч[её]тност[ьи] функций/i.test(raw)) return 'Функции';
+  if (/делимость|НОД наборов|суммы кратных/i.test(raw)) return 'Делимость и числа';
+  return raw || 'Другие темы';
+}
+
+function getTopicForQuestion(question) {
+  return getTopicLabel(question && question.category, question && question.skillId);
 }
 
 function getSkillLabel(skillId) {
   return SKILL_LABELS[skillId] || String(skillId || 'Общий навык').replace(/[-_]+/g, ' ');
+}
+
+function getDetailedSolutionHtml(q) {
+  const id = q && q.skillId;
+  let rule = '';
+
+  if (id === 'log-sum-product-same-base') {
+    rule = `<p>По свойству логарифмов: <strong>сумма логарифмов с одинаковым основанием равна логарифму произведения аргументов.</strong></p>
+      <div class="rounded-lg bg-white/80 border border-slate-200 p-3 text-center">$\\log_a b+\\log_a c=\\log_a(bc),\\quad a>0,\\ a\\ne1,\\ b,c>0.$</div>
+      <p>Вычисляем произведение аргументов и оставляем прежнее основание логарифма.</p>`;
+  } else if (id === 'log-equation-product-times') {
+    rule = `<p>Сначала упрощаем разность логарифмов по свойству:</p>
+      <div class="rounded-lg bg-white/80 border border-slate-200 p-3 text-center">$\\log_a u-\\log_a v=\\log_a\\frac{u}{v}.$</div>
+      <p>Затем удобно сделать замену $t=\\log_a x$ и решить полученное квадратное уравнение. В конце возвращаемся к $x$ и проверяем область допустимых значений.</p>`;
+  } else if (id === 'linear-parallel-slope') {
+    rule = `<p>Для прямой $y=kx+b$ число $k$ — угловой коэффициент. <strong>Разные прямые параллельны, если их угловые коэффициенты равны, а свободные члены различаются.</strong></p>
+      <div class="rounded-lg bg-white/80 border border-slate-200 p-3 text-center">$k_1=k_2,\\qquad b_1\\ne b_2.$</div>
+      <p>Значит, сравниваем только коэффициенты при $x$; свободный член может быть другим.</p>`;
+  } else if (id === 'trig-zero-argument') {
+    const isSine = String(q.questionText || '').includes('\\\\sin');
+    rule = isSine
+      ? `<p>На единичной окружности $\\cos x$ — координата точки по горизонтали (ось $x$), а $\\sin x$ — координата по вертикали (ось $y$).</p>
+        <p>Синус равен нулю, когда точка лежит на горизонтальной оси: её вертикальная координата равна нулю.</p>
+        <div class="rounded-lg bg-white/80 border border-slate-200 p-3 text-center">$\\sin x=0\\iff x=\\pi k,\\quad k\\in\\mathbb Z.$</div>
+        <p>Например, при $x=-\\pi$ точка окружности находится в положении $(-1,0)$: поэтому $\\sin(-\\pi)=0$, а $\\cos(-\\pi)=-1$.</p>`
+      : `<p>На единичной окружности $\\cos x$ — горизонтальная координата точки, а $\\sin x$ — вертикальная. Косинус равен нулю, когда горизонтальная координата равна нулю, то есть точка находится на вертикальной оси.</p>
+        <div class="rounded-lg bg-white/80 border border-slate-200 p-3 text-center">$\\cos x=0\\iff x=\\frac{\\pi}{2}+\\pi k,\\quad k\\in\\mathbb Z.$</div>
+        <p>Поэтому значения вида $-\\frac{\\pi}{2}$ и $-\\frac{3\\pi}{2}$ дают нулевой косинус, а $\\cos(-\\pi)=-1$.</p>`;
+  } else if (id === 'arcsin-expression-value') {
+    rule = `<p>Функция $\\arcsin t$ возвращает угол в пределах $[-\\frac{\\pi}{2};\\frac{\\pi}{2}]$, синус которого равен $t$.</p>
+      <div class="rounded-lg bg-white/80 border border-slate-200 p-3 space-y-1">
+        <p>$\\arcsin(-1)=-\\frac{\\pi}{2}$</p>
+        <p>$\\arcsin(-\\frac12)=-\\frac{\\pi}{6}$</p>
+        <p>$\\arcsin(-\\frac{\\sqrt2}{2})=-\\frac{\\pi}{4}$</p>
+        <p>$\\arcsin(-\\frac{\\sqrt3}{2})=-\\frac{\\pi}{3}.$</p>
+      </div>
+      <p>Подставляем табличное значение в исходное выражение и упрощаем.</p>`;
+  } else if (id === 'function-parity-neither') {
+    rule = `<p>Проверяем чётность и нечётность по определениям. Сначала область определения должна быть симметрична относительно нуля.</p>
+      <div class="rounded-lg bg-white/80 border border-slate-200 p-3 space-y-1">
+        <p>Чётная: $f(-x)=f(x).$</p>
+        <p>Нечётная: $f(-x)=-f(x).$</p>
+      </div>
+      <p>Если ни одно равенство не выполняется (или область определения несимметрична), функция не является ни чётной, ни нечётной.</p>`;
+  } else if (id === 'triangle-true-statement') {
+    rule = `<p>Полезные быстрые факты для таких утверждений:</p>
+      <div class="rounded-lg bg-white/80 border border-slate-200 p-3 space-y-1">
+        <p>Равносторонний треугольник: $a=\\frac{P}{3}.$</p>
+        <p>Равнобедренный треугольник с основанием $b$: $a=\\frac{P-b}{2}.$</p>
+        <p>Медиана, проведённая к гипотенузе прямоугольного треугольника, равна половине гипотенузы: $m=\\frac{c}{2}.$</p>
+      </div>
+      <p>Подставляем числа из каждого утверждения и проверяем, какое из них выполняется.</p>`;
+  } else if (id === 'gcd-candy-sets') {
+    rule = `<p>Чтобы разделить несколько видов конфет на максимально возможное число одинаковых наборов без остатка, нужно найти <strong>наибольший общий делитель (НОД)</strong> всех количеств.</p>
+      <div class="rounded-lg bg-white/80 border border-slate-200 p-3 text-center">$N=\\operatorname{НОД}(a,b,c).$</div>
+      <p>Каждое количество конфет делится на $N$ без остатка, а увеличить число наборов нельзя.</p>`;
+  } else if (id === 'division-remainder-formula') {
+    rule = `<p>При делении с остатком действует одно правило:</p>
+      <div class="rounded-lg bg-white/80 border border-slate-200 p-3 text-center">$\\text{делимое}=\\text{делитель}\\cdot\\text{неполное частное}+\\text{остаток}.$</div>
+      <p>Подставляем известные делитель, частное и остаток в эту формулу.</p>`;
+  } else if (id === 'quadratic-product-of-roots') {
+    rule = `<p>По теореме Виета для $x^2+px+q=0$ сумма корней равна $-p$, а произведение корней равно свободному члену $q$.</p>
+      <div class="rounded-lg bg-white/80 border border-slate-200 p-3 text-center">$x_1x_2=q.$</div>
+      <p>Ищем уравнение с нужным свободным членом и проверяем, что у него есть действительные корни.</p>`;
+  } else if (id === 'expression-sense-at-negative') {
+    rule = `<p>Для выражений с корнями проверяем знак подкоренного выражения:</p>
+      <div class="rounded-lg bg-white/80 border border-slate-200 p-3 space-y-1">
+        <p>Под чётным корнем: $A\\ge0.$</p>
+        <p>Нечётный корень определён при любом действительном $A$.</p>
+        <p>Если корень стоит в знаменателе, он дополнительно не должен быть равен нулю.</p>
+      </div>`;
+  } else if (id === 'rational-inequality-x2-over-a-x') {
+    rule = `<p>Квадрат числа неотрицателен: $x^2\\ge0$, а дробь отрицательна, когда числитель положителен и знаменатель отрицателен. Случай $x=0$ отдельно исключается, потому что тогда дробь равна нулю.</p>`;
+  } else if (id === 'exponential-inequality-smallest-integer') {
+    rule = `<p>В показательных неравенствах удобно привести степени к одинаковому основанию. При основании больше единицы знак неравенства сохраняется при сравнении показателей.</p>`;
+  } else if (id === 'intervals-true-statements') {
+    rule = `<p>Для промежутков аккуратно проверяй скобки: круглая скобка означает, что граница не входит, квадратная — что входит. Для проверки целых чисел всегда выписывай допустимые целые значения, а не только длину промежутка.</p>`;
+  } else if (id === 'sum-multiples-in-interval') {
+    rule = `<p>Сначала перечисляем все кратные числа, которые строго больше нижней и строго меньше верхней границы. Если они образуют арифметическую прогрессию, можно сложить их по формуле $S_n=\\frac{(a_1+a_n)n}{2}.$</p>`;
+  }
+
+  if (!rule) return q && q.solution ? q.solution : '';
+  return `<div class="space-y-3">
+    <section class="rounded-xl border border-indigo-100 bg-indigo-50/70 p-3 space-y-2">
+      <p class="text-[11px] font-bold uppercase tracking-wider text-indigo-800">Правило / быстрый способ</p>
+      <div class="text-sm leading-7 text-slate-800">${rule}</div>
+    </section>
+    <section class="space-y-1">
+      <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Применяем к заданию</p>
+      <div class="text-sm leading-7">${q.solution || 'Подставь данные из условия в правило выше и проверь ответ.'}</div>
+    </section>
+  </div>`;
 }
 
 function safeParseArray(raw) {
@@ -397,7 +521,7 @@ function getInfinitePracticePool() {
   return questions.filter(q => {
     // При выборе подтемы собираем все задания этого навыка, даже если они из разных лет/разделов.
     if (infinitePracticeSkillId) return q.skillId === infinitePracticeSkillId;
-    if (infinitePracticeTopicLabel) return getTopicLabel(q.category) === infinitePracticeTopicLabel;
+    if (infinitePracticeTopicLabel) return getTopicForQuestion(q) === infinitePracticeTopicLabel;
     return true;
   });
 }
@@ -468,6 +592,11 @@ function finishInfinitePractice() {
 }
 function openTestConfig() { currentScreen = 'config-test-screen'; render(); }
 function openMaterials() { currentScreen = 'materials-screen'; render(); }
+function setMaterialsTab(tab) {
+  materialsTab = tab === 'tips' ? 'tips' : 'score';
+  render();
+}
+function openTopicsMenu() { currentScreen = 'topics-menu'; render(); }
 function openErrorsMenu() { currentScreen = 'errors-menu'; render(); }
 
 function updateMarkPreview(v) {
@@ -969,7 +1098,7 @@ function startErrorPractice(category, skillId = null) {
   const ids = getErrors().filter(id => {
     const original = questions.find(q => String(q.id) === String(id));
     if (!original) return false;
-    const topicMatches = Boolean(skillId) || !topic || getTopicLabel(original.category) === topic;
+    const topicMatches = Boolean(skillId) || !topic || getTopicForQuestion(original) === topic;
     const skillMatches = !skillId || String(original.skillId) === String(skillId);
     return topicMatches && skillMatches;
   });
@@ -1084,7 +1213,7 @@ function answerQuestion(idx) {
   const correctButton = document.querySelector(`.option-btn[data-idx="${q.correctIndex}"]`);
   const optionText = correctButton && correctButton.querySelector('.option-text');
   if (optionText && !optionText.querySelector('.option-explanation')) {
-    optionText.insertAdjacentHTML('beforeend', `<div class="option-explanation mt-3 pt-3 border-t border-emerald-900/15"><p class="mb-1 text-[11px] font-bold uppercase tracking-wider opacity-80">Подробное решение</p><div>${q.solution}</div></div>`);
+    optionText.insertAdjacentHTML('beforeend', `<div class="option-explanation mt-3 pt-3 border-t border-emerald-900/15"><p class="mb-1 text-[11px] font-bold uppercase tracking-wider opacity-80">Подробное решение</p><div>${getDetailedSolutionHtml(q)}</div></div>`);
     if (window.MathJax && window.MathJax.typesetPromise) {
       const explanation = optionText.querySelector('.option-explanation');
       if (explanation) window.MathJax.typesetPromise([explanation]).catch(() => {});
@@ -1393,7 +1522,7 @@ function render() {
   else if (currentScreen === 'topics-menu') {
     const grouped = new Map();
     questions.forEach(q => {
-      const topic = getTopicLabel(q.category);
+      const topic = getTopicForQuestion(q);
       if (!grouped.has(topic)) grouped.set(topic, new Map());
       const skills = grouped.get(topic);
       const key = q.skillId || 'general';
@@ -1423,7 +1552,7 @@ function render() {
     const errorQuestions = questions.filter(q => errorIds.includes(String(q.id)));
     const groups = new Map();
     errorQuestions.forEach(q => {
-      const topic = getTopicLabel(q.category);
+      const topic = getTopicForQuestion(q);
       if (!groups.has(topic)) groups.set(topic, new Map());
       const skills = groups.get(topic);
       const skill = q.skillId || 'general';
@@ -1463,6 +1592,40 @@ function render() {
     MARK_RANGES.forEach(r => {
       rows += `<div class="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2"><span class="text-sm font-semibold text-slate-800">Отметка ${r.mark}</span><span class="text-sm text-slate-600">${r.table} баллов</span></div>`;
     });
+    const tabs = `
+      <div class="grid grid-cols-2 gap-2 rounded-xl bg-slate-100 p-1">
+        <button onclick="setMaterialsTab('score')" class="rounded-lg px-3 py-2.5 text-sm font-bold transition ${materialsTab === 'score' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'}">Баллы</button>
+        <button onclick="setMaterialsTab('tips')" class="rounded-lg px-3 py-2.5 text-sm font-bold transition ${materialsTab === 'tips' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'}">Лайфхаки</button>
+      </div>`;
+    const tips = [
+      { title:'Параллельные прямые', tag:'Функции', body:`Для прямых $$y=k_1x+b_1$$ и $$y=k_2x+b_2$$ достаточно сравнить коэффициенты при $$x$$. Если $$k_1=k_2$$, а $$b_1\\ne b_2$$, прямые параллельны. Пример: $$y=3x+1$$ и $$y=3x-7$$ параллельны; $$y=4x+1$$ — уже нет.` },
+      { title:'Чётность функции за две проверки', tag:'Функции', body:`1) Проверь, симметрична ли область определения относительно нуля. 2) Сравни $$f(-x)$$ с $$f(x)$$ и $$-f(x)$$. Если первое равно — функция чётная; если второе — нечётная. Пример: $$f(x)=x^2$$ чётная, $$g(x)=x^3$$ нечётная. Функция $$x^2+x$$ обычно не является ни той, ни другой.` },
+      { title:'Сумма и разность логарифмов', tag:'Логарифмы', body:`При одинаковом основании сумма превращается в логарифм произведения, а разность — в логарифм частного: $$\\log_a b+\\log_a c=\\log_a(bc),$$ $$\\log_a b-\\log_a c=\\log_a\\frac bc.$$ Например, $$\\log_2 5+\\log_2 9=\\log_2 45$$ — не $$\\log_2 14$$ и не произведение двух логарифмов.` },
+      { title:'Почему синус равен нулю при x = −π', tag:'Тригонометрия', body:`На единичной окружности $$\\cos x$$ — координата по горизонтали, а $$\\sin x$$ — по вертикали. При $$x=-\\pi$$ точка находится в координатах $$(-1,0)$$: вертикальная координата равна нулю, поэтому $$\\sin(-\\pi)=0$$, но $$\\cos(-\\pi)=-1$$. В общем виде: $$\\sin x=0$$ при $$x=\\pi k$$. Для косинуса наоборот: $$\\cos x=0$$ при $$x=\\frac\\pi2+\\pi k$$.` },
+      { title:'Треугольники: три быстрых факта', tag:'Геометрия', body:`Равносторонний: $$a=P/3$$. Равнобедренный с основанием $$b$$: $$a=(P-b)/2$$. В прямоугольном треугольнике медиана к гипотенузе равна её половине: $$m=c/2$$. Эти формулы помогают быстро проверять утверждения, не решая задачу целиком.` },
+      { title:'Максимум одинаковых наборов', tag:'Делимость', body:`Если нужно разложить несколько количеств по одинаковым наборам без остатка, ищи НОД. Например, из $$24$$, $$36$$ и $$60$$ предметов можно сделать максимум $$\\operatorname{НОД}(24,36,60)=12$$ одинаковых наборов.` },
+      { title:'Деление с остатком', tag:'Числа', body:`Всегда используй одну формулу: $$\\text{делимое}=\\text{делитель}\\cdot\\text{частное}+\\text{остаток}.$$ Например, если делитель равен $$7$$, частное $$12$$, остаток $$3$$, то делимое $$7\\cdot12+3=87$$. Остаток должен быть неотрицательным и меньше делителя.` },
+      { title:'Чётный и нечётный корень', tag:'Корни', body:`Корень чётной степени из отрицательного числа не является действительным: $$\\sqrt{-9}$$ не имеет действительного значения. Корень нечётной степени определён и для отрицательных чисел: $$\\sqrt[3]{-8}=-2$$. Если корень стоит в знаменателе, знаменатель дополнительно не должен обращаться в ноль.` },
+      { title:'Сумма кратных чисел в промежутке', tag:'Числа', body:`Сначала выпиши только кратные числа, которые строго больше нижней и строго меньше верхней границы. Например, кратные $$9$$ между $$121$$ и $$152$$: $$126,135,144$$. Их сумма равна $$405$$. Не включай сами границы, даже если одна из них кратна нужному числу.` }
+    ];
+    const tipsHtml = tips.map((tip, i) => `
+      <article class="rounded-xl border border-slate-200 bg-white p-4 space-y-2">
+        <div class="flex items-center justify-between gap-3"><h3 class="font-bold text-slate-900">${i+1}. ${tip.title}</h3><span class="shrink-0 rounded-full bg-indigo-50 px-2.5 py-1 text-[11px] font-bold text-indigo-700">${tip.tag}</span></div>
+        <div class="text-sm leading-7 text-slate-700">${tip.body}</div>
+      </article>`).join('');
+    const scorePanel = `
+      <section class="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4 space-y-3">
+        <h3 class="font-bold text-slate-900">Проверить тестовый балл</h3>
+        <p class="text-xs leading-5 text-slate-600">Введи результат по стобалльной шкале и посмотри справочную отметку. Проверь актуальность порогов по официальной таблице для своего экзаменационного года.</p>
+        <label class="block text-sm font-semibold text-slate-700" for="mark-input">Тестовый балл (0–100)</label>
+        <input id="mark-input" type="number" min="0" max="100" inputmode="numeric" placeholder="Например, 73" class="w-full border border-slate-300 rounded-xl px-4 py-3 text-lg font-semibold bg-white focus:outline-none focus:border-emerald-500" oninput="updateMarkPreview(this.value)">
+        <p class="text-sm font-bold text-emerald-800">Результат: <span id="mark-preview">—</span></p>
+      </section>
+      <details class="rounded-2xl border border-slate-200 bg-white p-4">
+        <summary class="cursor-pointer font-bold text-slate-800">Показать всю шкалу перевода баллов</summary>
+        <p class="text-xs text-slate-500 mt-3 mb-2">0 баллов — не аттестован. Остальные диапазоны — текущая справочная шкала тренажёра.</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">${rows}</div>
+      </details>`;
     app.innerHTML = `
       <div class="space-y-5">
         <div class="flex items-center gap-3">
@@ -1470,18 +1633,8 @@ function render() {
           <span class="menu-icon bg-violet-50 text-violet-700" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5.5A2.5 2.5 0 0 1 5.5 3H12v17H5.5A2.5 2.5 0 0 0 3 22zM12 3h6.5A2.5 2.5 0 0 1 21 5.5V22H12"/></svg></span>
           <h2 class="text-xl sm:text-2xl font-bold text-slate-900">Полезные материалы</h2>
         </div>
-        <section class="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4 space-y-3">
-          <h3 class="font-bold text-slate-900">Проверить тестовый балл</h3>
-          <p class="text-xs leading-5 text-slate-600">Введи результат по стобалльной шкале и посмотри соответствующую отметку.</p>
-          <label class="block text-sm font-semibold text-slate-700" for="mark-input">Тестовый балл (0–100)</label>
-          <input id="mark-input" type="number" min="0" max="100" inputmode="numeric" placeholder="Например, 73" class="w-full border border-slate-300 rounded-xl px-4 py-3 text-lg font-semibold bg-white focus:outline-none focus:border-emerald-500" oninput="updateMarkPreview(this.value)">
-          <p class="text-sm font-bold text-emerald-800">Результат: <span id="mark-preview">—</span></p>
-        </section>
-        <details class="rounded-2xl border border-slate-200 bg-white p-4">
-          <summary class="cursor-pointer font-bold text-slate-800">Показать всю шкалу перевода баллов</summary>
-          <p class="text-xs text-slate-500 mt-3 mb-2">0 баллов — не аттестован. Для остальных значений используется отображённая ниже шкала.</p>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">${rows}</div>
-        </details>
+        ${tabs}
+        ${materialsTab === 'score' ? scorePanel : `<div class="space-y-3"><p class="text-sm text-slate-600">Короткие правила для быстрого решения типичных заданий. Условия применимости и объяснение приведены вместе с примерами.</p>${tipsHtml}</div>`}
       </div>`;
   }
 
@@ -1523,7 +1676,7 @@ function render() {
         <div id="solution-block" class="hidden min-w-0 max-w-full overflow-hidden bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
           <p id="verdict-line" class="text-sm font-semibold"></p>
           <p class="text-xs font-bold text-slate-700 uppercase tracking-wider">Подробное решение:</p>
-          <p class="solution-copy text-slate-700">${q.solution}</p>
+          <div class="solution-copy text-slate-700">${getDetailedSolutionHtml(q)}</div>
         </div>
         <button id="next-btn" onclick="nextQuestion()" class="hidden w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3.5 px-6 rounded-xl shadow-md">Дальше</button>
       </div>`;
