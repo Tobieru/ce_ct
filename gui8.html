@@ -64,7 +64,9 @@ mjx-container { -webkit-user-select: none; user-select: none; }
 .scratchpad-symbols { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: .4rem; }
 .scratchpad-symbol { min-width: 0; min-height: 38px; padding: .45rem .15rem; border: 1px solid #cbd5e1; border-radius: .55rem; background: #f8fafc; color: #1e293b; font-size: .9rem; font-weight: 600; }
 #scratchpad-text, .scratchpad-textarea { display:block; width:100%; min-height:22dvh; max-height:48dvh; resize:vertical; border:1px solid #cbd5e1; border-radius:.8rem; padding:.9rem; color:#0f172a; background:#fff; font:1rem/1.8 ui-monospace,SFMono-Regular,Consolas,monospace; }
-.tip-plain-formula { display:block; box-sizing:border-box; width:100%; max-width:100%; margin:.55rem 0; padding:.7rem .8rem; border:1px solid #dbeafe; border-radius:.7rem; background:#eff6ff; white-space:normal; overflow-wrap:anywhere; word-break:normal; line-height:1.6; }
+.tip-plain-formula { display:flex; flex-wrap:wrap; align-items:baseline; gap:.25rem .4rem; box-sizing:border-box; min-width:0; width:100%; max-width:100%; margin:.55rem 0; padding:.7rem .8rem; border:1px solid #dbeafe; border-radius:.7rem; background:#eff6ff; white-space:normal; overflow-wrap:anywhere; word-break:normal; line-height:1.65; }
+.tip-plain-formula > span { min-width:0; max-width:100%; overflow-wrap:anywhere; }
+.tip-plain-formula .formula-term { display:inline; }
 .tip-topic-filters { display:flex; flex-wrap:wrap; gap:.45rem; margin:.75rem 0 1rem; }
 .tip-topic-chip { border:1px solid #cbd5e1; border-radius:999px; padding:.5rem .8rem; background:#fff; color:#475569; font-size:.8rem; font-weight:700; }
 .tip-topic-chip.active { border-color:#4f46e5; background:#eef2ff; color:#3730a3; }
@@ -590,6 +592,7 @@ function getNextInfiniteQuestion() {
 }
 
 function startInfinitePractice(skillId = null, topicLabel = null, displayLabel = '') {
+  clearScratchpadData();
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
   timerEnabled = false;
   timerInterval = null;
@@ -625,6 +628,7 @@ function startInfinitePractice(skillId = null, topicLabel = null, displayLabel =
 }
 
 function finishInfinitePractice() {
+  clearScratchpadData();
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
   if (infiniteAnsweredCount === 0) {
     currentScreen = 'main-menu';
@@ -675,6 +679,7 @@ function buildRandomOrderedTest() {
 }
 
 function startNewTest() {
+  clearScratchpadData();
   timerEnabled = isTimerOn;
   testDurationMinutes = selectedTimerMinutes;
 
@@ -1142,6 +1147,7 @@ function makeAnalog(original, usedSig) {
 }
 
 function startErrorPractice(category, skillId = null) {
+  clearScratchpadData();
   if (timerInterval) clearInterval(timerInterval);
   timerInterval = null;
   timerEnabled = false;
@@ -1197,6 +1203,7 @@ function exitErrorPractice() {
   if (!confirm(msg)) return;
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
   finishErrorPracticeSession(true);
+  clearScratchpadData();
   answeredCurrent = false;
   multiSelection = new Set();
   currentScreen = 'errors-menu';
@@ -1458,7 +1465,7 @@ let scratchStrokes = [];
 let scratchRedo = [];
 let scratchCurrentStroke = null;
 let scratchBaseWidth = 800;
-let scratchBaseHeight = 560;
+let scratchBaseHeight = 1400;
 let scratchPointers = new Map();
 let scratchPanAnchor = null;
 let scratchPinchAnchor = null;
@@ -1511,7 +1518,7 @@ function ensureScratchpad() {
               <button onclick="changeScratchZoom(0.2)" class="scratchpad-tool" aria-label="Увеличить масштаб">+</button>
             </div>
           </div>
-          <p class="text-xs leading-5 text-slate-500">Выбери «Ручка», чтобы писать пальцем или стилусом. В режиме «Двигать / масштаб» перетаскивай лист одним пальцем или используй два пальца для увеличения.</p>
+          <p class="text-xs leading-5 text-slate-500">Лист высокий и автоматически расширяется вниз и вправо по мере письма. Выбери «Ручка», чтобы писать, «Ластик» — чтобы стирать. В режиме «Двигать / масштаб» перемещай лист одним пальцем или увеличивай двумя пальцами.</p>
           <div id="scratchpad-viewport" class="scratchpad-viewport">
             <canvas id="scratchpad-canvas" aria-label="Область для рукописных заметок"></canvas>
           </div>
@@ -1540,7 +1547,6 @@ function ensureScratchpad() {
               <button class="scratchpad-symbol" onclick="insertScratchToken('≥')">≥</button>
               <button class="scratchpad-symbol" onclick="insertScratchToken('±')">±</button>
               <button class="scratchpad-symbol" onclick="insertScratchToken('∞')">∞</button>
-              <button class="scratchpad-symbol" onclick="insertScratchToken('→')">→</button>
             </div>
           </div>
           <p class="text-xs text-slate-500">Черновик свободный: записи не проверяются и не влияют на баллы.</p>
@@ -1564,7 +1570,7 @@ function ensureScratchpad() {
   viewport.addEventListener('lostpointercapture', handleScratchPointerUp);
   window.addEventListener('resize', handleScratchResize);
   scratchBaseWidth = Math.max(280, Math.floor(viewport.clientWidth || window.innerWidth - 32));
-  scratchBaseHeight = Math.max(280, Math.min(560, Math.floor(window.innerHeight * 0.46)));
+  scratchBaseHeight = Math.max(1200, Math.floor(window.innerHeight * 1.2));
   renderScratchCanvas();
 }
 
@@ -1577,7 +1583,7 @@ function openScratchpad() {
     if (!viewport) return;
     if (scratchStrokes.length === 0) {
       scratchBaseWidth = Math.max(280, Math.floor(viewport.clientWidth || window.innerWidth - 32));
-      scratchBaseHeight = Math.max(280, Math.min(560, Math.floor(window.innerHeight * 0.46)));
+      scratchBaseHeight = Math.max(1200, Math.floor(window.innerHeight * 1.2));
     }
     renderScratchCanvas();
   });
@@ -1603,8 +1609,10 @@ function clearScratchpadData() {
   if (textarea) textarea.value = '';
   const viewport = document.getElementById('scratchpad-viewport');
   scratchBaseWidth = Math.max(280, Math.floor((viewport && viewport.clientWidth) || (window.innerWidth - 48)));
-  scratchBaseHeight = Math.max(280, Math.min(560, Math.floor(window.innerHeight * 0.46)));
+  scratchBaseHeight = Math.max(1200, Math.floor(window.innerHeight * 1.2));
   if (viewport) { viewport.scrollLeft = 0; viewport.scrollTop = 0; }
+  const zoomLabel = document.getElementById('scratch-zoom-label');
+  if (zoomLabel) zoomLabel.textContent = '100%';
   renderScratchCanvas();
 }
 
@@ -1670,6 +1678,11 @@ function insertScratchToken(token) {
   const end = textarea.selectionEnd ?? start;
   textarea.setRangeText(token, start, end, 'end');
   textarea.focus();
+  // For paired templates, place the caret inside the pair rather than after the closing bracket.
+  if (token === '√()' || token === '^()') {
+    const caret = start + token.length - 1;
+    textarea.setSelectionRange(caret, caret);
+  }
 }
 function handleScratchResize() {
   if (!scratchpadCreated) return;
@@ -1678,7 +1691,7 @@ function handleScratchResize() {
   if (!overlay || overlay.classList.contains('hidden') || !viewport) return;
   if (scratchStrokes.length === 0) {
     scratchBaseWidth = Math.max(280, Math.floor(viewport.clientWidth || window.innerWidth - 32));
-    scratchBaseHeight = Math.max(260, Math.min(560, Math.floor(window.innerHeight * 0.46)));
+    scratchBaseHeight = Math.max(1200, Math.floor(window.innerHeight * 1.2));
   }
   renderScratchCanvas();
 }
@@ -1692,8 +1705,8 @@ function extendScratchCanvasForPoint(point) {
   if (!point) return false;
   const oldWidth = scratchBaseWidth, oldHeight = scratchBaseHeight;
   let nextWidth = oldWidth, nextHeight = oldHeight;
-  if (point.x * oldWidth > oldWidth - 85 && oldWidth < 4000) nextWidth = Math.min(4000, oldWidth + Math.max(320, Math.round(oldWidth * .45)));
-  if (point.y * oldHeight > oldHeight - 85 && oldHeight < 5000) nextHeight = Math.min(5000, oldHeight + Math.max(360, Math.round(oldHeight * .45)));
+  if (point.x * oldWidth > oldWidth - 85 && oldWidth < 10000) nextWidth = Math.min(10000, oldWidth + Math.max(420, Math.round(oldWidth * .5)));
+  if (point.y * oldHeight > oldHeight - 85 && oldHeight < 10000) nextHeight = Math.min(10000, oldHeight + Math.max(520, Math.round(oldHeight * .5)));
   while (nextWidth * nextHeight > 16000000) {
     if (nextHeight > oldHeight) nextHeight = Math.max(oldHeight, nextHeight - 250);
     else if (nextWidth > oldWidth) nextWidth = Math.max(oldWidth, nextWidth - 250);
@@ -2049,7 +2062,7 @@ function render() {
         При $x=-\\pi$ точка находится в координатах $(-1,0)$: вертикальная координата равна нулю, поэтому $\\sin(-\\pi)=0$, но $\\cos(-\\pi)=-1$. В общем виде: $\\sin x=0$ при $x=\\pi k$. Для косинуса наоборот: $\\cos x=0$ при $x=\\frac\\pi2+\\pi k$.` },
       { title:'Треугольники: три быстрых факта', tag:'Геометрия', topic:'Геометрия', body:`<p>Обозначения: $P$ — периметр (сумма длин всех сторон); $S$ — площадь; $h$ — высота; $a$ — сторона; $b$ — основание; $c$ — гипотенуза; $m$ — медиана. В задачах о конусе обычно $l$ или $L$ обозначает образующую.</p><div class="tip-geometry-legend"><span><strong>Равносторонний треугольник:</strong> $a=P/3$, где $a$ — сторона.</span><span><strong>Равнобедренный треугольник:</strong> если основание равно $b$, то боковая сторона $a=(P-b)/2$.</span><span><strong>Прямоугольный треугольник:</strong> медиана к гипотенузе $m=c/2$.</span></div><p>Эти формулы помогают быстро проверять утверждения без полного решения.</p>` },
       { title:'Максимум одинаковых наборов', tag:'Делимость', topic:'Числа и делимость', body:`Если нужно разложить несколько количеств по одинаковым наборам без остатка, ищи НОД. Например, из $24$, $36$ и $60$ предметов можно сделать максимум $\\operatorname{НОД}(24,36,60)=12$ одинаковых наборов.` },
-      { title:'Деление с остатком', tag:'Числа', topic:'Числа и делимость', body:`<p>Главное правило: делимое — это число, которое делим.</p><div class="tip-plain-formula"><strong>Делимое</strong> = <strong>делитель</strong> × <strong>неполное частное</strong> + <strong>остаток</strong></div><p><strong>Пример:</strong> делитель — $7$, неполное частное — $12$, остаток — $3$. Тогда делимое: $7\\cdot12+3=87$.</p><p>Остаток всегда неотрицательный и строго меньше делителя: при делении на $7$ остаток может быть от $0$ до $6$.</p>` },
+      { title:'Деление с остатком', tag:'Числа', topic:'Числа и делимость', body:`<p>Главное правило: делимое — число, которое делим.</p><div class="tip-plain-formula"><span><strong>Делимое</strong> =</span><span><strong>делитель</strong> × <strong>неполное частное</strong></span><span>+</span><span class="formula-term"><strong>остаток</strong></span></div><p><strong>Пример:</strong> делитель — $7$, неполное частное — $12$, остаток — $3$. Тогда делимое: $7\\cdot12+3=87$.</p><p>Остаток всегда неотрицательный и строго меньше делителя: при делении на $7$ остаток может быть от $0$ до $6$.</p>` },
       { title:'Чётный и нечётный корень', tag:'Корни', topic:'Корни', body:`Корень чётной степени из отрицательного числа не является действительным: $\\sqrt{-9}$ не имеет действительного значения. Корень нечётной степени определён и для отрицательных чисел: $\\sqrt[3]{-8}=-2$. Если корень стоит в знаменателе, знаменатель дополнительно не должен обращаться в ноль.` },
       { title:'Признак делимости на 9', tag:'Числа', topic:'Числа и делимость', body:`Число делится на $9$ без остатка, если сумма его цифр делится на $9$. <p><strong>Пример:</strong> для числа $4635$ сумма цифр равна $4+6+3+5=18$. Число $18$ делится на $9$, значит, $4635$ тоже делится на $9$.</p><p>Если сумма цифр не делится на $9$, само число тоже не делится на $9$.</p>` },
       { title:'Сумма кратных чисел в промежутке', tag:'Числа', topic:'Числа и делимость', body:`Сначала выпиши только кратные числа, которые строго больше нижней и строго меньше верхней границы. Например, кратные $9$ между $121$ и $152$: $126,135,144$. Их сумма равна $405$. Не включай сами границы, даже если одна из них кратна нужному числу.` }
