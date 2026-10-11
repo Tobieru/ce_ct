@@ -8,7 +8,11 @@
 <script>
 window.MathJax = {
   tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
-  options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'], enableMenu: false, enableExplorer: false }
+  options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'], enableMenu: false, enableExplorer: false },
+  output: {
+    displayOverflow: 'linebreak',
+    linebreaks: { inline: true, width: '100%', lineleading: 0.2 }
+  }
 };
 </script>
 <script defer src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
@@ -16,14 +20,24 @@ window.MathJax = {
 :root { color-scheme: light; }
 body { line-height: 1.55; }
 button { -webkit-tap-highlight-color: transparent; }
-.math-question { min-width: 0; max-width: 100%; font-size: 1.12rem; line-height: 1.9; overflow-wrap: anywhere; }
-.solution-copy { display: block; min-width: 0; max-width: 100%; font-size: 1rem; line-height: 1.85; overflow-wrap: anywhere; overflow-x: auto; padding-bottom: .3rem; }
-.solution-copy mjx-container { max-width: 100%; }
+.math-question { min-width: 0; max-width: 100%; font-size: 1.1rem; line-height: 1.8; overflow-wrap: normal; word-break: normal; overflow-x: auto; }
+.solution-copy { display: block; min-width: 0; max-width: 100%; font-size: 1rem; line-height: 1.8; overflow-wrap: normal; word-break: normal; overflow-x: auto; padding-bottom: .3rem; }
+.solution-copy mjx-container, .math-question mjx-container, .option-text mjx-container { max-width: 100%; }
+.math-question mjx-container, .option-text mjx-container { vertical-align: middle; }
 mjx-container, mjx-container * { pointer-events: none !important; }
 mjx-container:focus, mjx-container *:focus { outline: none !important; }
 mjx-container { -webkit-user-select: none; user-select: none; }
-.option-btn { min-height: 56px; min-width: 0; line-height: 1.55; overflow-wrap: anywhere; transition: background-color .15s, border-color .15s, color .15s; }
-.option-btn > .option-text { min-width: 0; overflow-wrap: anywhere; }
+.option-btn { min-height: 56px; min-width: 0; line-height: 1.6; overflow-wrap: normal; word-break: normal; transition: background-color .15s, border-color .15s, color .15s; }
+.option-btn > .option-text { display: block; min-width: 0; overflow-wrap: normal; word-break: normal; }
+.option-explanation { display: block; width: 100%; white-space: normal; overflow-wrap: normal; word-break: normal; font-weight: 400; line-height: 1.8; }
+.menu-action { display:flex; width:100%; align-items:center; gap:1rem; padding:1rem; border:1px solid #e2e8f0; border-radius:1.15rem; background:#fff; box-shadow:0 3px 10px rgba(15,23,42,.035); text-align:left; transition:transform .15s,border-color .15s,background-color .15s,box-shadow .15s; }
+.menu-action:hover { transform:translateY(-1px); border-color:#bfdbfe; background:#f8fbff; box-shadow:0 8px 20px rgba(15,23,42,.07); }
+.menu-icon { display:inline-flex; flex:0 0 auto; width:3rem; height:3rem; align-items:center; justify-content:center; border-radius:1rem; }
+.menu-action-copy { display:flex; min-width:0; flex:1; flex-direction:column; gap:.2rem; }
+.menu-action-title { font-size:1.02rem; font-weight:750; line-height:1.35; color:#12304a; }
+.menu-action-description { font-size:.84rem; line-height:1.5; color:#64748b; }
+.topic-panel { border:1px solid #e2e8f0; background:#fff; border-radius:1rem; padding:1rem; }
+@media (max-width:390px) { .menu-action { gap:.75rem; padding:.85rem; } .menu-icon { width:2.7rem; height:2.7rem; } .menu-action-title { font-size:.96rem; } .menu-action-description { font-size:.78rem; } }
 .option-btn.is-correct { background: #d1fae5 !important; border-color: #10b981 !important; color: #065f46 !important; box-shadow: 0 0 0 1px #6ee7b7; }
 .option-btn.is-wrong { background: #ffe4e6 !important; border-color: #f43f5e !important; color: #881337 !important; box-shadow: 0 0 0 1px #fda4af; }
 .option-btn.is-missed { background: #fffbeb !important; border-color: #f59e0b !important; border-style: dashed !important; color: #92400e !important; }
@@ -165,7 +179,7 @@ questions.forEach(q => {
 
 const PRIMARY_TO_TEST = [0,2,10,15,21,25,29,32,35,38,41,43,45,48,50,52,53,55,57,58,60,61,63,64,65,66,68,69,70,71,73,74,75,76,78,79,80,82,83,85,87,88,90,93,94,95,96,97,98,99,100];
 const MARK_RANGES = [
-  { mark: 1, min: 0, max: 2, table: '1–2' },
+  { mark: 1, min: 1, max: 2, table: '1–2' },
   { mark: 2, min: 3, max: 9, table: '3–9' },
   { mark: 3, min: 10, max: 18, table: '10–18' },
   { mark: 4, min: 19, max: 28, table: '19–28' },
@@ -181,8 +195,9 @@ const primaryToTest = p => PRIMARY_TO_TEST[Math.max(0, Math.min(50, Math.round(p
 
 const testToMark = s => {
   const v = Math.max(0, Math.min(100, Math.round(s)));
+  if (v === 0) return 'Не аттестован';
   const r = MARK_RANGES.find(r => v >= r.min && v <= r.max);
-  return r ? r.mark : 1;
+  return r ? r.mark : 'Не аттестован';
 };
 
 let currentScreen = 'main-menu';
@@ -204,6 +219,40 @@ let isTimerOn = false;
 let currentPracticeSession = null;
 let lastPracticeClosed = 0;
 let multiSelection = new Set();
+let infinitePracticeSkillId = null;
+let infinitePracticeTopicLabel = null;
+let infinitePracticeTitle = '';
+let infiniteAnsweredCount = 0;
+let infiniteSeenIds = new Set();
+let lastInfiniteQuestionId = null;
+
+const SKILL_LABELS = {
+  'fraction-to-natural-gt1': 'Дроби: натуральное значение больше 1',
+  'triangle-true-statement': 'Утверждения о треугольниках',
+  'rational-inequality-x2-over-a-x': 'Рациональные неравенства',
+  'log-sum-product-same-base': 'Свойства логарифмов',
+  'linear-parallel-slope': 'Параллельные графики линейных функций',
+  'intervals-true-statements': 'Числовые промежутки',
+  'function-parity-neither': 'Чётность функций',
+  'gcd-candy-sets': 'НОД и одинаковые наборы',
+  'trig-zero-argument': 'Нули синуса и косинуса',
+  'division-remainder-formula': 'Деление с остатком',
+  'quadratic-product-of-roots': 'Квадратные уравнения: произведение корней',
+  'purchase-change-kopecks': 'Текстовые задачи на деньги',
+  'arcsin-expression-value': 'Обратные тригонометрические функции',
+  'expression-sense-at-negative': 'Область определения выражений',
+  'sum-multiples-in-interval': 'Сумма кратных чисел',
+  'log-equation-product-times': 'Логарифмические уравнения',
+  'exponential-inequality-smallest-integer': 'Показательные неравенства'
+};
+
+function getTopicLabel(category) {
+  return String(category || '').replace(/\s*\(ЦЭ\/ЦТ\s+\d{4}\)$/i, '').trim() || 'Другие темы';
+}
+
+function getSkillLabel(skillId) {
+  return SKILL_LABELS[skillId] || String(skillId || 'Общий навык').replace(/[-_]+/g, ' ');
+}
 
 function safeParseArray(raw) {
   try {
@@ -343,6 +392,78 @@ function openTestsMenu() { currentScreen = 'tests-menu'; render(); }
 function openReadyVariants() { currentScreen = 'ready-variants-menu'; render(); }
 function startRandomConfig() { pendingTest = { kind: 'random' }; openTestConfig(); }
 function selectReadyVariant(y, e, v) { pendingTest = { kind: 'ready', year: y, exam: e, variant: v }; openTestConfig(); }
+
+function getInfinitePracticePool() {
+  return questions.filter(q =>
+    (!infinitePracticeSkillId || q.skillId === infinitePracticeSkillId) &&
+    (!infinitePracticeTopicLabel || getTopicLabel(q.category) === infinitePracticeTopicLabel)
+  );
+}
+
+function getNextInfiniteQuestion() {
+  const pool = getInfinitePracticePool();
+  if (!pool.length) return null;
+
+  let available = pool.filter(q => !infiniteSeenIds.has(String(q.id)));
+  if (!available.length) {
+    infiniteSeenIds = new Set();
+    available = pool.filter(q => String(q.id) !== String(lastInfiniteQuestionId));
+  }
+  if (!available.length) available = pool;
+
+  const next = pick(available);
+  infiniteSeenIds.add(String(next.id));
+  lastInfiniteQuestionId = String(next.id);
+  return Object.assign({}, next);
+}
+
+function startInfinitePractice(skillId = null, topicLabel = null, displayLabel = '') {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  timerEnabled = false;
+  timerInterval = null;
+  infinitePracticeSkillId = skillId || null;
+  infinitePracticeTopicLabel = topicLabel || null;
+  infinitePracticeTitle = displayLabel || (skillId ? getSkillLabel(skillId) : topicLabel || 'Все темы и годы');
+  infiniteAnsweredCount = 0;
+  infiniteSeenIds = new Set();
+  lastInfiniteQuestionId = null;
+
+  const first = getNextInfiniteQuestion();
+  if (!first) {
+    alert('Для выбранной темы пока нет заданий.');
+    currentScreen = skillId || topicLabel ? 'topics-menu' : 'main-menu';
+    render();
+    return;
+  }
+
+  currentTestQuestions = [first];
+  currentQuestionIndex = 0;
+  score = 0;
+  sessionMaxPoints = 0;
+  testMode = 'normal';
+  testKind = 'infinite';
+  currentTestLabel = 'Бесконечная практика: ' + infinitePracticeTitle;
+  pendingTest = { kind: 'infinite' };
+  currentPracticeSession = null;
+  lastPracticeClosed = 0;
+  answeredCurrent = false;
+  multiSelection = new Set();
+  currentScreen = 'test-screen';
+  render();
+}
+
+function finishInfinitePractice() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  if (infiniteAnsweredCount === 0) {
+    currentScreen = 'main-menu';
+    render();
+    return;
+  }
+  testKind = 'infinite-finished';
+  currentTestLabel = 'Бесконечная практика: ' + infinitePracticeTitle;
+  currentScreen = 'result-screen';
+  render();
+}
 function openTestConfig() { currentScreen = 'config-test-screen'; render(); }
 function openMaterials() { currentScreen = 'materials-screen'; render(); }
 function openErrorsMenu() { currentScreen = 'errors-menu'; render(); }
@@ -353,7 +474,8 @@ function updateMarkPreview(v) {
   const n = Number(v);
   if (v === '' || !Number.isFinite(n)) { el.textContent = '—'; return; }
   const s = Math.max(0, Math.min(100, Math.round(n)));
-  el.textContent = `${s} балл(ов) → отметка ${testToMark(s)}`;
+  const mark = testToMark(s);
+  el.textContent = s === 0 ? '0 баллов → не аттестован' : `${s} балл(ов) → отметка ${mark}`;
 }
 
 // Рандомный тест: строго по порядку номеров, каждый номер — случайный год/вариант, без повторов номеров.
@@ -836,17 +958,21 @@ function makeAnalog(original, usedSig) {
   return null;
 }
 
-function startErrorPractice(category) {
+function startErrorPractice(category, skillId = null) {
   if (timerInterval) clearInterval(timerInterval);
   timerInterval = null;
   timerEnabled = false;
   lastPracticeClosed = 0;
-  const cat = category === undefined || category === null ? null : category;
+  const topic = category === undefined || category === null ? null : category;
   const ids = getErrors().filter(id => {
-    const o = questions.find(q => String(q.id) === String(id));
-    return o && (!cat || o.category === cat);
+    const original = questions.find(q => String(q.id) === String(id));
+    if (!original) return false;
+    const topicMatches = !topic || getTopicLabel(original.category) === topic;
+    const skillMatches = !skillId || String(original.skillId) === String(skillId);
+    return topicMatches && skillMatches;
   });
-  if (!ids.length) { alert('Нет активных ошибок для отработки.'); return; }
+  if (!ids.length) { alert('Для выбранной темы нет активных ошибок.'); return; }
+
   const pack = [];
   currentPracticeSession = { mistakes: {} };
   const usedSig = new Map();
@@ -856,14 +982,15 @@ function startErrorPractice(category) {
     const key = String(original.id);
     currentPracticeSession.mistakes[key] = { originalCorrect: false, originalWrong: false, analogCorrect: 0, analogTotal: 0, analogPresented: 0 };
     pack.push(Object.assign({}, original, { practiceOriginalId: key, isOriginal: true }));
-    let pres = 0;
+    let presented = 0;
     for (let i = 0; i < 3; i++) {
-      const a = makeAnalog(original, usedSig);
-      if (a) { pack.push(a); pres++; }
+      const analog = makeAnalog(original, usedSig);
+      if (analog) { pack.push(analog); presented++; }
     }
-    currentPracticeSession.mistakes[key].analogPresented = pres;
+    currentPracticeSession.mistakes[key].analogPresented = presented;
   }
   if (!pack.length) { alert('Не удалось подготовить задания.'); currentPracticeSession = null; return; }
+
   shuffleArray(pack);
   currentTestQuestions = pack;
   currentQuestionIndex = 0;
@@ -899,47 +1026,65 @@ function afterAnswer(isCorrect, points, verdictText, verdictOk) {
   score += points;
   const q = currentTestQuestions[currentQuestionIndex];
   sessionMaxPoints += q.maxPoints || 0;
+  if (testKind === 'infinite') infiniteAnsweredCount++;
+
   if (testMode === 'normal' && !isCorrect) {
-    const errs = getErrors();
-    const qid = String(q.id);
-    if (!errs.includes(qid)) { errs.push(qid); saveErrors(errs); }
+    const errors = getErrors();
+    const id = String(q.id);
+    if (!errors.includes(id)) { errors.push(id); saveErrors(errors); }
   }
   if (testMode === 'error' && q.practiceOriginalId && currentPracticeSession) {
-    const rec = currentPracticeSession.mistakes[String(q.practiceOriginalId)];
-    if (rec) {
+    const record = currentPracticeSession.mistakes[String(q.practiceOriginalId)];
+    if (record) {
       if (q.isOriginal) {
-        if (isCorrect) rec.originalCorrect = true;
-        else rec.originalWrong = true;
+        if (isCorrect) record.originalCorrect = true;
+        else record.originalWrong = true;
       } else {
-        rec.analogTotal++;
-        if (isCorrect) rec.analogCorrect++;
+        record.analogTotal++;
+        if (isCorrect) record.analogCorrect++;
       }
     }
   }
-  const v = document.getElementById('verdict-line');
-  if (v) {
-    v.textContent = verdictText;
-    v.classList.remove('text-emerald-700', 'text-rose-700');
-    v.classList.add(verdictOk ? 'text-emerald-700' : 'text-rose-700');
+
+  const verdict = document.getElementById('verdict-line');
+  const solutionBlock = document.getElementById('solution-block');
+  const nextButton = document.getElementById('next-btn');
+  if (verdict) {
+    verdict.textContent = verdictText;
+    verdict.classList.remove('text-emerald-700', 'text-rose-700');
+    verdict.classList.add(verdictOk ? 'text-emerald-700' : 'text-rose-700');
   }
-  document.getElementById('solution-block').classList.remove('hidden');
-  document.getElementById('next-btn').classList.remove('hidden');
+  if (solutionBlock) {
+    if (q.type === 'single') solutionBlock.classList.add('hidden');
+    else solutionBlock.classList.remove('hidden');
+  }
+  if (nextButton) nextButton.classList.remove('hidden');
 }
 
 function answerQuestion(idx) {
   if (answeredCurrent) return;
   const q = currentTestQuestions[currentQuestionIndex];
   const ok = idx === q.correctIndex;
-  document.querySelectorAll('.option-btn').forEach((btn, i) => {
-    btn.disabled = true;
-    btn.classList.remove('hover:border-indigo-300', 'hover:bg-indigo-50/40', 'bg-white', 'border-slate-200', 'text-slate-800', 'is-correct', 'is-wrong', 'is-missed', 'opacity-50', 'opacity-60');
-    if (i === q.correctIndex) btn.classList.add('is-correct', 'font-semibold');
-    else if (i === idx && !ok) btn.classList.add('is-wrong', 'font-semibold');
-    else btn.classList.add('opacity-60');
-    const lb = btn.querySelector('.option-label');
-    if (lb) lb.classList.remove('bg-slate-100', 'text-slate-500');
+  document.querySelectorAll('.option-btn').forEach((button, index) => {
+    button.disabled = true;
+    button.classList.remove('hover:border-indigo-300', 'hover:bg-indigo-50/40', 'bg-white', 'border-slate-200', 'text-slate-800', 'is-correct', 'is-wrong', 'is-missed', 'opacity-50', 'opacity-60');
+    if (index === q.correctIndex) button.classList.add('is-correct', 'font-semibold');
+    else if (index === idx && !ok) button.classList.add('is-wrong', 'font-semibold');
+    else button.classList.add('opacity-60');
+    const label = button.querySelector('.option-label');
+    if (label) label.classList.remove('bg-slate-100', 'text-slate-500');
   });
-  afterAnswer(ok, ok ? 1 : 0, ok ? 'Задание засчитано: 1 п.б.' : 'Задание не засчитано: 0 п.б.', ok);
+
+  const correctButton = document.querySelector(`.option-btn[data-idx="${q.correctIndex}"]`);
+  const optionText = correctButton && correctButton.querySelector('.option-text');
+  if (optionText && !optionText.querySelector('.option-explanation')) {
+    optionText.insertAdjacentHTML('beforeend', `<div class="option-explanation mt-3 pt-3 border-t border-emerald-900/15"><p class="mb-1 text-[11px] font-bold uppercase tracking-wider opacity-80">Подробное решение</p><div>${q.solution}</div></div>`);
+    if (window.MathJax && window.MathJax.typesetPromise) {
+      window.MathJax.typesetPromise([correctButton]).catch(() => {});
+    }
+  }
+
+  afterAnswer(ok, ok ? 1 : 0, ok ? 'Верно! Задание засчитано: 1 п.б.' : 'Неверно. Верный ответ выделен зелёным.', ok);
 }
 
 function toggleMulti(idx) {
@@ -1031,6 +1176,17 @@ function finishErrorPracticeSession(onlyComplete) {
 }
 
 function nextQuestion() {
+  if (testKind === 'infinite') {
+    const next = getNextInfiniteQuestion();
+    if (!next) { finishInfinitePractice(); return; }
+    currentTestQuestions = [next];
+    currentQuestionIndex = 0;
+    answeredCurrent = false;
+    multiSelection = new Set();
+    render();
+    return;
+  }
+
   answeredCurrent = false;
   currentQuestionIndex++;
   multiSelection = new Set();
@@ -1106,27 +1262,60 @@ function render() {
   const app = document.getElementById('app');
 
   if (currentScreen === 'main-menu') {
-    if (timerInterval) clearInterval(timerInterval);
-    const ec = getErrors().length;
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+    const errorsCount = getErrors().length;
     app.innerHTML = `
-      <div class="space-y-6 text-center">
-        <div>
-          <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">Подготовка к ЦЭ / ЦТ</h2>
-          <p class="text-slate-600 text-sm">Задания 2024 и 2026: A1–A10, B3, B11, B14. Баллы по схеме ЦЭ/ЦТ.</p>
+      <div class="space-y-4 text-left">
+        <section class="rounded-2xl bg-gradient-to-br from-blue-800 via-indigo-700 to-sky-700 text-white p-5 sm:p-6 shadow-lg">
+          <div class="flex items-center justify-between gap-4">
+            <div class="min-w-0">
+              <p class="text-xs font-bold uppercase tracking-[.18em] text-blue-100">ЦЭ / ЦТ · Беларусь</p>
+              <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight mt-2">Математика</h2>
+              <p class="text-sm text-blue-100 mt-1">Подготовка в удобном темпе</p>
+            </div>
+            <div class="shrink-0 rounded-2xl bg-white/15 p-3" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="w-10 h-10"><path stroke-linecap="round" stroke-linejoin="round" d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path stroke-linecap="round" stroke-linejoin="round" d="M4 5.5v16M8 7h8M8 11h8M8 15h5"/></svg>
+            </div>
+          </div>
+          <div class="mt-5 flex items-center gap-2 text-xs font-semibold text-white/90">
+            <span class="rounded-full bg-white/15 px-3 py-1.5">${questions.length} заданий в базе</span>
+            <span class="rounded-full bg-white/15 px-3 py-1.5">${errorsCount} ошибок</span>
+          </div>
+        </section>
+
+        <div class="space-y-3">
+          <button onclick="openReadyVariants()" class="menu-action">
+            <span class="menu-icon bg-blue-50 text-blue-700" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="w-7 h-7"><path stroke-linecap="round" stroke-linejoin="round" d="M8 4h9l3 3v13H8zM17 4v4h4M11 12h6M11 16h6"/><path stroke-linecap="round" d="M4 8v13h13"/></svg></span>
+            <span class="menu-action-copy"><span class="menu-action-title">Варианты ЦЭ/ЦТ</span><span class="menu-action-description">Выбери год и номер варианта</span></span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5 text-blue-700 shrink-0" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+
+          <button onclick="startInfinitePractice()" class="menu-action">
+            <span class="menu-icon bg-cyan-50 text-cyan-700" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" class="w-7 h-7"><path stroke-linecap="round" stroke-linejoin="round" d="M7 8c-4.5 0-4.5 8 0 8 2.5 0 4-2 5-4s2.5-4 5-4c4.5 0 4.5 8 0 8-2.5 0-4-2-5-4s-2.5-4-5-4z"/></svg></span>
+            <span class="menu-action-copy"><span class="menu-action-title">Бесконечная практика</span><span class="menu-action-description">Случайные задания из разных тем и лет — без конца</span></span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5 text-blue-700 shrink-0" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+
+          <button onclick="openErrorsMenu()" class="menu-action">
+            <span class="menu-icon bg-amber-50 text-amber-700" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="w-7 h-7"><circle cx="10.5" cy="10.5" r="6.5"/><circle cx="10.5" cy="10.5" r="3"/><path stroke-linecap="round" stroke-linejoin="round" d="m15.5 15.5 5 5M10.5 2v2M2 10.5h2"/></svg></span>
+            <span class="menu-action-copy"><span class="menu-action-title">Слабые темы</span><span class="menu-action-description">Только то, где ещё встречаются ошибки</span></span>
+            <span class="shrink-0 rounded-full bg-amber-100 text-amber-800 px-3 py-1 text-xs font-bold">${errorsCount}</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5 text-blue-700 shrink-0" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+
+          <button onclick="openTopicsMenu()" class="menu-action">
+            <span class="menu-icon bg-emerald-50 text-emerald-700" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="w-7 h-7"><path stroke-linecap="round" stroke-linejoin="round" d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5zM4 5.5v16M8 7h8M8 11h8M8 15h5"/></svg></span>
+            <span class="menu-action-copy"><span class="menu-action-title">Конкретная тема</span><span class="menu-action-description">Выбери тему или отдельный навык</span></span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5 text-blue-700 shrink-0" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+
+          <button onclick="openMaterials()" class="menu-action">
+            <span class="menu-icon bg-violet-50 text-violet-700" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="w-7 h-7"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5.5A2.5 2.5 0 0 1 5.5 3H12v17H5.5A2.5 2.5 0 0 0 3 22zM12 3h6.5A2.5 2.5 0 0 1 21 5.5V22H12"/><path stroke-linecap="round" d="M6.5 7h2.5M6.5 11h2.5M15 7h2.5M15 11h2.5"/></svg></span>
+            <span class="menu-action-copy"><span class="menu-action-title">Полезные материалы</span><span class="menu-action-description">Шкала баллов и справочная информация</span></span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5 text-blue-700 shrink-0" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
         </div>
-        <div class="grid gap-4 py-2">
-          <button onclick="openTestsMenu()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-4 px-6 rounded-xl shadow-md transition flex items-center justify-center space-x-2"><span class="text-lg">Тесты</span></button>
-          <button onclick="openErrorsMenu()" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-4 px-6 rounded-xl shadow-md transition flex items-center justify-between"><span class="text-lg">Отработка ошибок</span><span class="bg-amber-700 text-amber-100 text-sm font-bold px-3 py-1 rounded-full">${ec}</span></button>
-          <button onclick="openMaterials()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-4 px-6 rounded-xl shadow-md transition flex items-center justify-center"><span class="text-lg">Полезные материалы</span></button>
-        </div>
-        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-left text-xs text-slate-600 space-y-1">
-          <p class="font-semibold text-slate-700">Особенности:</p>
-          <p>• «Тесты» → готовые варианты по годам (2026 и 2024, варианты 1–5) или рандомный микс.</p>
-          <p>• Рандомный микс идёт строго по порядку номеров (A1, A2, …), каждый номер — из случайного варианта случайного года, повторов номеров нет.</p>
-          <p>• Баллы: А1–А10 — 1 п.б. только за полностью верный ответ; Б3–Б20 — 2 п.б. только за точный ответ.</p>
-          <p>• Часть B: ответ без пробелов, проверка посимвольная.</p>
-          <p>• Ошибка закрывается после верного исходного и минимум 2 аналогов; из отработки можно выйти кнопкой сверху.</p>
-        </div>
+        <p class="text-center text-xs text-slate-500 pt-1">Локальный тренажёр · прогресс хранится на этом устройстве</p>
       </div>`;
   }
 
@@ -1194,61 +1383,98 @@ function render() {
       </div>`;
   }
 
+  else if (currentScreen === 'topics-menu') {
+    const grouped = new Map();
+    questions.forEach(q => {
+      const topic = getTopicLabel(q.category);
+      if (!grouped.has(topic)) grouped.set(topic, new Map());
+      const skills = grouped.get(topic);
+      const key = q.skillId || 'general';
+      if (!skills.has(key)) skills.set(key, { label: getSkillLabel(key), count: 0 });
+      skills.get(key).count++;
+    });
+    const blocks = [...grouped.entries()].sort((a,b) => a[0].localeCompare(b[0], 'ru')).map(([topic, skills]) => {
+      const total = [...skills.values()].reduce((sum, x) => sum + x.count, 0);
+      const subtopics = [...skills.entries()].sort((a,b) => a[1].label.localeCompare(b[1].label, 'ru')).map(([skill, item]) =>
+        `<button data-skill="${escapeHtml(skill)}" data-topic="${escapeHtml(topic)}" data-label="${escapeHtml(item.label)}" onclick="startInfinitePractice(this.dataset.skill, this.dataset.topic, this.dataset.label)" class="rounded-xl border border-slate-200 bg-white px-3 py-3 text-left hover:border-indigo-300 hover:bg-indigo-50/50 transition"><span class="block text-sm font-semibold text-slate-800">${escapeHtml(item.label)}</span><span class="block mt-1 text-xs text-slate-500">${item.count} заданий</span></button>`
+      ).join('');
+      return `<section class="topic-panel space-y-3"><div class="flex items-start justify-between gap-3"><div><h3 class="font-bold text-slate-900">${escapeHtml(topic)}</h3><p class="text-xs text-slate-500 mt-1">${total} заданий в теме</p></div><button data-topic="${escapeHtml(topic)}" onclick="startInfinitePractice(null, this.dataset.topic, this.dataset.topic)" class="shrink-0 rounded-lg bg-indigo-50 px-3 py-2 text-xs font-bold text-indigo-700 hover:bg-indigo-100">Вся тема</button></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-2">${subtopics}</div></section>`;
+    }).join('');
+    app.innerHTML = `
+      <div class="space-y-5">
+        <div class="flex items-center gap-3">
+          <button onclick="currentScreen='main-menu';render();" class="text-slate-600 hover:text-slate-900 font-semibold text-sm flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100">${BACK_BTN}<span>Назад</span></button>
+          <h2 class="text-xl sm:text-2xl font-bold text-slate-900">Конкретная тема</h2>
+        </div>
+        <p class="text-sm text-slate-600">Выбери целую тему или конкретный навык. Задания будут идти случайно, без повторов, пока не пройдёшь всю подходящую базу.</p>
+        ${blocks || '<p class="text-sm text-slate-500">В базе пока нет заданий.</p>'}
+      </div>`;
+  }
+
   else if (currentScreen === 'errors-menu') {
-    const eids = getErrors();
-    const eqs = questions.filter(q => eids.includes(String(q.id)));
-    const cc = {};
-    eqs.forEach(q => { cc[q.category] = (cc[q.category] || 0) + 1; });
-    let ch = '';
-    for (const [cat, count] of Object.entries(cc)) {
-      ch += `<button data-cat="${escapeHtml(cat)}" onclick="startErrorPractice(this.dataset.cat)" class="w-full bg-white border border-slate-200 hover:border-amber-400 hover:bg-amber-50/50 p-4 rounded-xl flex justify-between items-center shadow-sm"><span class="font-medium text-slate-800 text-left">${escapeHtml(cat)}</span><span class="bg-amber-100 text-amber-800 text-xs font-bold px-2.5 py-1 rounded-full">${count}</span></button>`;
+    const errorIds = getErrors();
+    const errorQuestions = questions.filter(q => errorIds.includes(String(q.id)));
+    const groups = new Map();
+    errorQuestions.forEach(q => {
+      const topic = getTopicLabel(q.category);
+      if (!groups.has(topic)) groups.set(topic, new Map());
+      const skills = groups.get(topic);
+      const skill = q.skillId || 'general';
+      if (!skills.has(skill)) skills.set(skill, { label: getSkillLabel(skill), ids: [] });
+      skills.get(skill).ids.push(String(q.id));
+    });
+    let categoryHtml = '';
+    for (const [topic, skills] of [...groups.entries()].sort((a,b) => a[0].localeCompare(b[0], 'ru'))) {
+      const count = [...skills.values()].reduce((sum, x) => sum + x.ids.length, 0);
+      const subtopicsHtml = [...skills.entries()].sort((a,b) => a[1].label.localeCompare(b[1].label, 'ru')).map(([skill, item]) =>
+        `<button data-topic="${escapeHtml(topic)}" data-skill="${escapeHtml(skill)}" onclick="startErrorPractice(this.dataset.topic, this.dataset.skill)" class="w-full rounded-xl border border-amber-100 bg-white p-3 text-left hover:bg-amber-50 hover:border-amber-300 transition flex items-center justify-between gap-3"><span class="text-sm font-medium text-slate-800">${escapeHtml(item.label)}</span><span class="rounded-full bg-amber-100 text-amber-800 text-xs font-bold px-2.5 py-1 shrink-0">${item.ids.length}</span></button>`
+      ).join('');
+      categoryHtml += `<section class="topic-panel space-y-3"><div class="flex items-center justify-between gap-3"><div><h3 class="font-bold text-slate-900">${escapeHtml(topic)}</h3><p class="text-xs text-slate-500 mt-1">${count} ошибок</p></div><button data-topic="${escapeHtml(topic)}" onclick="startErrorPractice(this.dataset.topic)" class="shrink-0 rounded-lg bg-amber-500 px-3 py-2 text-xs font-bold text-white hover:bg-amber-600">Вся тема</button></div><div class="grid gap-2">${subtopicsHtml}</div></section>`;
     }
     app.innerHTML = `
-      <div class="space-y-6">
-        <div class="flex items-center justify-between">
+      <div class="space-y-5">
+        <div class="flex items-center gap-3">
           <button onclick="currentScreen='main-menu';render();" class="text-slate-600 hover:text-slate-900 font-semibold text-sm flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100">${BACK_BTN}<span>Назад</span></button>
-          <h2 class="text-xl sm:text-2xl font-bold text-slate-900">Отработка ошибок</h2>
+          <h2 class="text-xl sm:text-2xl font-bold text-slate-900">Слабые темы</h2>
         </div>
-        ${eids.length ? `
-          <button onclick="startErrorPractice(null)" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 px-4 rounded-xl shadow-md">Отработать все ошибки (${eids.length})</button>
-          <div class="space-y-3">
-            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Выберите тему:</p>
-            ${ch}
-          </div>
-          <p class="text-xs text-slate-500">Если запустил не ту тему или передумал — во время отработки сверху есть кнопка «Выйти из отработки».</p>
+        ${errorIds.length ? `
+          <button onclick="startErrorPractice(null)" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3.5 px-4 rounded-xl shadow-md">Отработать все ошибки (${errorIds.length})</button>
+          <p class="text-sm text-slate-600">Выбери всю тему или только подтему, в которой возникли ошибки.</p>
+          ${categoryHtml}
         ` : `
-          <div class="text-center py-12 space-y-3">
-            <div class="text-emerald-500 text-5xl">🎉</div>
-            <p class="text-slate-700 font-medium text-lg">Нет активных ошибок!</p>
-            <p class="text-slate-500 text-sm">Решайте новые варианты тестов, чтобы они здесь появились.</p>
+          <div class="text-center py-10 space-y-3">
+            <div class="mx-auto w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="w-8 h-8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3 2.8 20h18.4L12 3z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4M12 16.5h.01"/></svg></div>
+            <p class="text-slate-700 font-semibold text-lg">Пока нет сохранённых ошибок</p>
+            <p class="text-slate-500 text-sm">Решай тесты. Задания, в которых ошибёшься, появятся здесь.</p>
           </div>
         `}
       </div>`;
   }
 
   else if (currentScreen === 'materials-screen') {
-    let rows = '';
+    let rows = `<div class="flex items-center justify-between gap-3 rounded-lg border border-rose-100 bg-rose-50 px-3 py-2"><span class="text-sm font-semibold text-slate-800">0 баллов</span><span class="text-sm font-bold text-rose-700">Не аттестован</span></div>`;
     MARK_RANGES.forEach(r => {
-      rows += `<div class="flex items-center justify-between bg-white border border-slate-200 rounded-xl px-4 py-3 shadow-sm"><span class="text-sm font-bold text-slate-800">Отметка ${r.mark}</span><span class="text-sm text-slate-600">${r.mark === 1 ? r.table + ' (и 0)' : r.table} баллов</span></div>`;
+      rows += `<div class="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2"><span class="text-sm font-semibold text-slate-800">Отметка ${r.mark}</span><span class="text-sm text-slate-600">${r.table} баллов</span></div>`;
     });
     app.innerHTML = `
-      <div class="space-y-6">
-        <div class="flex items-center justify-between">
+      <div class="space-y-5">
+        <div class="flex items-center gap-3">
           <button onclick="currentScreen='main-menu';render();" class="text-slate-600 hover:text-slate-900 font-semibold text-sm flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100">${BACK_BTN}<span>Назад</span></button>
+          <span class="menu-icon bg-violet-50 text-violet-700" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5.5A2.5 2.5 0 0 1 5.5 3H12v17H5.5A2.5 2.5 0 0 0 3 22zM12 3h6.5A2.5 2.5 0 0 1 21 5.5V22H12"/></svg></span>
           <h2 class="text-xl sm:text-2xl font-bold text-slate-900">Полезные материалы</h2>
         </div>
-        <div class="space-y-3">
-          <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Тестовый балл → отметка в аттестат</h3>
-          <p class="text-xs text-slate-500">Шкала перевода баллов ЦЭ по стобалльной шкале в отметку по десятибалльной шкале (математика).</p>
-          <div class="space-y-2">${rows}</div>
-          <div class="bg-emerald-50/60 border border-emerald-100 rounded-xl p-4 space-y-3">
-            <label class="block text-sm font-semibold text-slate-700" for="mark-input">Проверить свой тестовый балл:</label>
-            <input id="mark-input" type="number" min="0" max="100" inputmode="numeric" placeholder="Например, 73" class="w-full border border-slate-300 rounded-xl px-4 py-3 text-lg font-semibold bg-white focus:outline-none focus:border-emerald-500" oninput="updateMarkPreview(this.value)">
-            <p class="text-base font-bold text-emerald-700">Результат: <span id="mark-preview">—</span></p>
-          </div>
-          <p class="text-xs text-slate-500">Примечание: ноль баллов соответствует отметке 1.</p>
-        </div>
-        <!-- Сюда добавляются новые полезные материалы -->
+        <section class="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4 space-y-3">
+          <h3 class="font-bold text-slate-900">Проверить тестовый балл</h3>
+          <p class="text-xs leading-5 text-slate-600">Введи результат по стобалльной шкале и посмотри соответствующую отметку.</p>
+          <label class="block text-sm font-semibold text-slate-700" for="mark-input">Тестовый балл (0–100)</label>
+          <input id="mark-input" type="number" min="0" max="100" inputmode="numeric" placeholder="Например, 73" class="w-full border border-slate-300 rounded-xl px-4 py-3 text-lg font-semibold bg-white focus:outline-none focus:border-emerald-500" oninput="updateMarkPreview(this.value)">
+          <p class="text-sm font-bold text-emerald-800">Результат: <span id="mark-preview">—</span></p>
+        </section>
+        <details class="rounded-2xl border border-slate-200 bg-white p-4">
+          <summary class="cursor-pointer font-bold text-slate-800">Показать всю шкалу перевода баллов</summary>
+          <p class="text-xs text-slate-500 mt-3 mb-2">0 баллов — не аттестован. Для остальных значений используется отображённая ниже шкала.</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">${rows}</div>
+        </details>
       </div>`;
   }
 
@@ -1261,28 +1487,28 @@ function render() {
     let area = '';
     if (q.type === 'multi') {
       q.options.forEach((opt, idx) => {
-        area += `<button data-idx="${idx}" onclick="toggleMulti(${idx})" class="option-btn w-full text-left bg-white border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/40 p-4 sm:p-5 rounded-xl font-medium text-slate-800 shadow-sm flex items-start gap-3"><span class="option-label inline-flex shrink-0 items-center justify-center w-7 h-7 rounded-lg bg-slate-100 text-sm font-bold text-slate-500">${idx + 1}</span><span class="option-text pt-0.5 flex-1">${opt}</span></button>`;
+        area += `<button data-idx="${idx}" onclick="toggleMulti(${idx})" class="option-btn w-full text-left bg-white border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/40 p-4 sm:p-5 rounded-xl font-medium text-slate-800 shadow-sm flex items-start gap-3"><span class="option-label inline-flex shrink-0 items-center justify-center w-7 h-7 rounded-lg bg-slate-100 text-sm font-bold text-slate-500">${idx + 1}</span><div class="option-text pt-0.5 flex-1">${opt}</div></button>`;
       });
       area += `<p class="text-xs text-slate-500">Выберите несколько пунктов, затем нажмите «Ответить». Задание части A засчитывается только при полном совпадении набора номеров.</p><button id="multi-submit" onclick="submitMulti()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3.5 px-6 rounded-xl shadow-md">Ответить</button>`;
     } else if (q.type === 'input') {
       area = `<input id="answer-input" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" class="w-full border border-slate-300 rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 bg-white focus:outline-none focus:border-indigo-500" placeholder="Ваш ответ" onkeydown="if(event.key==='Enter'){submitInput();}"><p class="text-xs text-slate-500">Часть B: ответ запишите без пробелов и лишних символов — проверка посимвольная, иначе ответ не засчитается.</p><p id="input-correct-line" class="hidden text-sm font-semibold text-emerald-700"></p><button id="input-submit" onclick="submitInput()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3.5 px-6 rounded-xl shadow-md">Проверить</button>`;
     } else {
       q.options.forEach((opt, idx) => {
-        area += `<button onclick="answerQuestion(${idx})" class="option-btn w-full text-left bg-white border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/40 p-4 sm:p-5 rounded-xl font-medium text-slate-800 shadow-sm flex items-start gap-3"><span class="option-label inline-flex shrink-0 items-center justify-center w-7 h-7 rounded-lg bg-slate-100 text-sm font-bold text-slate-500">${labels[idx] || idx + 1}</span><span class="option-text pt-0.5 flex-1">${opt}</span></button>`;
+        area += `<button data-idx="${idx}" onclick="answerQuestion(${idx})" class="option-btn w-full text-left bg-white border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/40 p-4 sm:p-5 rounded-xl font-medium text-slate-800 shadow-sm flex items-start gap-3"><span class="option-label inline-flex shrink-0 items-center justify-center w-7 h-7 rounded-lg bg-slate-100 text-sm font-bold text-slate-500">${labels[idx] || idx + 1}</span><div class="option-text pt-0.5 flex-1">${opt}</div></button>`;
       });
     }
     app.innerHTML = `
       <div class="space-y-6">
-        ${testMode === 'error' ? `<button onclick="exitErrorPractice()" class="w-full sm:w-auto text-slate-600 hover:text-slate-900 font-semibold text-sm flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100">${BACK_BTN}<span>Выйти из отработки</span></button>` : ''}
+        ${testMode === 'error' ? `<button onclick="exitErrorPractice()" class="w-full sm:w-auto text-slate-600 hover:text-slate-900 font-semibold text-sm flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100">${BACK_BTN}<span>Выйти из отработки</span></button>` : testKind === 'infinite' ? `<button onclick="finishInfinitePractice()" class="w-full sm:w-auto text-slate-600 hover:text-slate-900 font-semibold text-sm flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100"><span>Завершить практику</span><span class="text-xs text-slate-500">(${infiniteAnsweredCount} отвечено)</span></button>` : ''}
         <div class="space-y-2">
           <div class="flex justify-between text-xs font-semibold text-slate-500 items-center">
-            <span>Вопрос ${currentQuestionIndex + 1} из ${currentTestQuestions.length}</span>
+            ${testKind === 'infinite' ? `<span>Вопрос ${infiniteAnsweredCount + 1} · бесконечная практика</span>` : `<span>Вопрос ${currentQuestionIndex + 1} из ${currentTestQuestions.length}</span>`}
             <div class="flex items-center space-x-3">
               ${timerEnabled ? `<span id="timer-display" class="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded font-mono font-bold">--:--</span>` : ''}
               <span class="bg-slate-100 px-2 py-0.5 rounded text-slate-700">${escapeHtml(q.category)}</span>
             </div>
           </div>
-          <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden"><div class="bg-indigo-600 h-full transition-all duration-300" style="width:${pp}%"></div></div>
+          ${testKind !== 'infinite' ? `<div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden"><div class="bg-indigo-600 h-full transition-all duration-300" style="width:${pp}%"></div></div>` : ''}
         </div>
         ${q.year ? `<p class="text-[11px] font-bold uppercase tracking-wider text-indigo-500">${escapeHtml(sourceLabel(q))}</p>` : ''}
         <div class="math-question font-semibold text-slate-900 bg-indigo-50/50 border border-indigo-100 rounded-xl p-4 sm:p-5">${q.questionText}</div>
@@ -1301,8 +1527,8 @@ function render() {
     if (timerInterval) clearInterval(timerInterval);
     const maxPts = sessionMaxPoints;
     const pct = maxPts ? Math.round((score / maxPts) * 100) : 0;
-    const tb = primaryToTest(score);
-    const mk = testToMark(tb);
+    const tb = testKind === 'infinite-finished' ? null : primaryToTest(score);
+    const mk = tb === null ? null : testToMark(tb);
     let msg = 'Отличный результат!';
     if (pct < 50) msg = 'Стоит еще повторить теорию по этой теме.';
     else if (pct < 80) msg = 'Хороший результат, но есть над чем поработать!';
@@ -1319,10 +1545,9 @@ function render() {
           <p class="text-xs font-semibold text-slate-500 uppercase">Первичный балл</p>
           <div class="text-4xl font-bold text-indigo-600">${score} / ${maxPts} п.б.</div>
           <div class="text-lg font-semibold text-slate-700">${pct}% первичных баллов</div>
-          <div class="text-sm text-slate-600">По таблице перевода: <span class="font-bold text-slate-800">${tb}</span> тестовых баллов</div>
-          <div class="text-sm text-slate-600">Отметка в аттестат: <span class="font-bold text-slate-800">${mk}</span></div>
+${tb !== null ? `<div class="text-sm text-slate-600">По таблице перевода: <span class="font-bold text-slate-800">${tb}</span> тестовых баллов</div><div class="text-sm text-slate-600">Отметка в аттестат: <span class="font-bold text-slate-800">${mk}</span></div>` : `<div class="text-sm text-slate-600">Решено заданий: <span class="font-bold text-slate-800">${infiniteAnsweredCount}</span></div>`}
         </div>
-        <p class="text-xs text-slate-500 max-w-sm mx-auto">Таблицы перевода действуют для полного варианта (50 п.б. и 100 тестовых). В тренажёре вариант короче, поэтому тестовый балл и отметка показаны справочно.</p>
+${tb !== null ? `<p class="text-xs text-slate-500 max-w-sm mx-auto">Таблицы перевода действуют для полного варианта (50 п.б. и 100 тестовых). В тренажёре вариант короче, поэтому тестовый балл и отметка показаны справочно.</p>` : `<p class="text-xs text-slate-500 max-w-sm mx-auto">Для бесконечной практики показан результат этой сессии без пересчёта в экзаменационную отметку.</p>`}
         <button onclick="currentScreen='main-menu';render();" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-4 px-6 rounded-xl shadow-md">В главное меню</button>
       </div>`;
   }
