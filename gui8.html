@@ -26,8 +26,10 @@ button { -webkit-tap-highlight-color: transparent; }
 .math-question mjx-container, .solution-copy mjx-container, .option-text mjx-container, .tip-formula-line mjx-container { max-width: none !important; white-space: nowrap; }
 .option-text { min-width: 0; max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; }
 .math-question mjx-container, .option-text mjx-container { vertical-align: middle; }
-.tip-body { font-size: .94rem; line-height: 1.75; color: #334155; }
+.tip-body { min-width: 0; max-width: 100%; font-size: .94rem; line-height: 1.75; color: #334155; overflow-wrap: anywhere; word-break: normal; }
+.tip-body p { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
 .tip-body p + p { margin-top: .75rem; }
+.tip-body mjx-container { display: inline-block; max-width: 100%; vertical-align: middle; white-space: nowrap; }
 .tip-formula-line { display: block; width: 100%; max-width: 100%; margin: .45rem 0; padding: .65rem .75rem; border: 1px solid #e2e8f0; border-radius: .7rem; background: #f8fafc; overflow-x: auto; overflow-y: hidden; white-space: nowrap; overscroll-behavior-x: contain; }
 .tip-rule-row { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; padding: .65rem 0; border-bottom: 1px solid #e2e8f0; }
 .tip-rule-row:last-child { border-bottom: 0; }
@@ -49,6 +51,25 @@ mjx-container { -webkit-user-select: none; user-select: none; }
 .menu-action-title { font-size:1.02rem; font-weight:750; line-height:1.35; color:#12304a; }
 .menu-action-description { font-size:.84rem; line-height:1.5; color:#64748b; }
 .topic-panel { border:1px solid #e2e8f0; background:#fff; border-radius:1rem; padding:1rem; }
+.scratchpad-overlay { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; background: rgba(15,23,42,.58); padding: .75rem; }
+.scratchpad-dialog { width: min(100%, 900px); max-height: 96dvh; display: flex; flex-direction: column; overflow: hidden; border-radius: 1.2rem; background: white; box-shadow: 0 24px 70px rgba(15,23,42,.3); }
+.scratchpad-scroll { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.scratchpad-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: .45rem; }
+.scratchpad-tool { min-height: 38px; padding: .5rem .7rem; border: 1px solid #cbd5e1; border-radius: .65rem; background: #fff; color: #334155; font-size: .82rem; font-weight: 650; }
+.scratchpad-tool.active { border-color: #4f46e5; background: #eef2ff; color: #3730a3; }
+.scratchpad-tool:focus-visible { outline: 2px solid #818cf8; outline-offset: 2px; }
+.scratchpad-viewport { height: min(48dvh, 460px); min-height: 240px; overflow: auto; border: 1px solid #cbd5e1; border-radius: .8rem; background: #fff; touch-action: none; overscroll-behavior: contain; }
+#scratchpad-canvas { display: block; background: white; touch-action: none; }
+.scratchpad-symbols { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: .4rem; }
+.scratchpad-symbol { min-width: 0; min-height: 38px; padding: .45rem .15rem; border: 1px solid #cbd5e1; border-radius: .55rem; background: #f8fafc; color: #1e293b; font-size: .9rem; font-weight: 600; }
+#scratchpad-text { width: 100%; min-height: 35dvh; resize: vertical; border: 1px solid #cbd5e1; border-radius: .8rem; padding: .9rem; color: #0f172a; background: white; font: 1rem/1.8 ui-monospace, SFMono-Regular, Consolas, monospace; }
+@media (max-width: 520px) {
+  .scratchpad-overlay { align-items: flex-end; padding: 0; }
+  .scratchpad-dialog { width: 100%; max-height: 96dvh; border-radius: 1.2rem 1.2rem 0 0; }
+  .scratchpad-tool { padding: .45rem .55rem; font-size: .78rem; }
+  .scratchpad-viewport { height: 44dvh; min-height: 215px; }
+  .scratchpad-symbols { grid-template-columns: repeat(4, minmax(0,1fr)); }
+}
 @media (max-width:390px) { .menu-action { gap:.75rem; padding:.85rem; } .menu-icon { width:2.7rem; height:2.7rem; } .menu-action-title { font-size:.96rem; } .menu-action-description { font-size:.78rem; } }
 .option-btn.is-correct { background: #d1fae5 !important; border-color: #10b981 !important; color: #065f46 !important; box-shadow: 0 0 0 1px #6ee7b7; }
 .option-btn.is-wrong { background: #ffe4e6 !important; border-color: #f43f5e !important; color: #881337 !important; box-shadow: 0 0 0 1px #fda4af; }
@@ -1412,6 +1433,317 @@ document.addEventListener('click', e => {
 
 const BACK_BTN = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>`;
 
+
+let scratchpadTab = 'draw';
+let scratchTool = 'pen';
+let scratchColor = '#172554';
+let scratchBrushSize = 3;
+let scratchZoom = 1;
+let scratchBackground = 'ruled';
+let scratchStrokes = [];
+let scratchRedo = [];
+let scratchCurrentStroke = null;
+let scratchBaseWidth = 800;
+let scratchBaseHeight = 560;
+let scratchPointers = new Map();
+let scratchPanAnchor = null;
+let scratchPinchAnchor = null;
+let scratchRenderQueued = false;
+let scratchpadCreated = false;
+
+function ensureScratchpad() {
+  if (scratchpadCreated && document.getElementById('scratchpad-overlay')) return;
+  const markup = `
+  <div id="scratchpad-overlay" class="hidden scratchpad-overlay" role="dialog" aria-modal="true" aria-labelledby="scratchpad-title">
+    <div class="scratchpad-dialog">
+      <header class="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-3">
+        <div class="min-w-0"><h2 id="scratchpad-title" class="text-lg font-extrabold text-slate-900">Черновик</h2><p class="text-xs text-slate-500">Записи сохраняются, пока открыта эта страница</p></div>
+        <button onclick="closeScratchpad()" class="scratchpad-tool shrink-0" aria-label="Закрыть черновик">Закрыть ✕</button>
+      </header>
+      <div class="px-4 pt-3">
+        <div class="grid grid-cols-2 gap-2 rounded-xl bg-slate-100 p-1">
+          <button id="scratch-tab-draw" onclick="setScratchpadTab('draw')" class="scratchpad-tool active">✍ От руки</button>
+          <button id="scratch-tab-text" onclick="setScratchpadTab('text')" class="scratchpad-tool">⌨ Текст и символы</button>
+        </div>
+      </div>
+      <div class="scratchpad-scroll p-4 space-y-3">
+        <section id="scratch-draw-panel" class="space-y-3">
+          <div class="scratchpad-toolbar">
+            <button id="scratch-tool-pen" onclick="setScratchTool('pen')" class="scratchpad-tool active">✎ Ручка</button>
+            <button id="scratch-tool-eraser" onclick="setScratchTool('eraser')" class="scratchpad-tool">⌫ Ластик</button>
+            <button id="scratch-tool-pan" onclick="setScratchTool('pan')" class="scratchpad-tool">✋ Двигать / масштаб</button>
+            <button onclick="scratchUndo()" class="scratchpad-tool">↶ Отменить</button>
+            <button onclick="scratchRedoAction()" class="scratchpad-tool">↷ Повторить</button>
+            <button onclick="scratchClear()" class="scratchpad-tool">Очистить</button>
+          </div>
+          <div class="scratchpad-toolbar rounded-xl bg-slate-50 p-2">
+            <label class="text-xs font-semibold text-slate-600">Цвет
+              <select id="scratch-color" onchange="setScratchColor(this.value)" class="ml-1 rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm">
+                <option value="#172554">Синий</option><option value="#111827">Чёрный</option><option value="#dc2626">Красный</option><option value="#15803d">Зелёный</option><option value="#7c3aed">Фиолетовый</option>
+              </select>
+            </label>
+            <label class="flex min-w-[130px] flex-1 items-center gap-2 text-xs font-semibold text-slate-600">Толщина
+              <input id="scratch-size" type="range" min="1" max="12" value="3" oninput="setScratchBrushSize(this.value)" class="min-w-0 flex-1">
+              <span id="scratch-size-label">3</span>
+            </label>
+            <label class="text-xs font-semibold text-slate-600">Фон
+              <select id="scratch-background" onchange="setScratchBackground(this.value)" class="ml-1 rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm">
+                <option value="plain">Чистый лист</option><option value="ruled" selected>В линейку</option><option value="grid">Клетка</option>
+              </select>
+            </label>
+            <div class="ml-auto flex items-center gap-1">
+              <button onclick="changeScratchZoom(-0.2)" class="scratchpad-tool" aria-label="Уменьшить масштаб">−</button>
+              <span id="scratch-zoom-label" class="min-w-[3.5rem] text-center text-xs font-bold text-slate-600">100%</span>
+              <button onclick="changeScratchZoom(0.2)" class="scratchpad-tool" aria-label="Увеличить масштаб">+</button>
+            </div>
+          </div>
+          <p class="text-xs leading-5 text-slate-500">Выбери «Ручка», чтобы писать пальцем или стилусом. В режиме «Двигать / масштаб» перетаскивай лист одним пальцем или используй два пальца для увеличения.</p>
+          <div id="scratchpad-viewport" class="scratchpad-viewport">
+            <canvas id="scratchpad-canvas" aria-label="Область для рукописных заметок"></canvas>
+          </div>
+        </section>
+        <section id="scratch-text-panel" class="hidden space-y-3">
+          <p class="text-sm leading-6 text-slate-600">Поле вызывает обычную клавиатуру телефона. Кнопки ниже вставляют распространённые математические символы и функции в место курсора.</p>
+          <div class="scratchpad-symbols">
+            <button class="scratchpad-symbol" onclick="insertScratchToken('x')">x</button><button class="scratchpad-symbol" onclick="insertScratchToken('y')">y</button><button class="scratchpad-symbol" onclick="insertScratchToken('z')">z</button><button class="scratchpad-symbol" onclick="insertScratchToken('π')">π</button>
+            <button class="scratchpad-symbol" onclick="insertScratchToken('√()')">√()</button><button class="scratchpad-symbol" onclick="insertScratchToken('²')">²</button><button class="scratchpad-symbol" onclick="insertScratchToken('ⁿ')">ⁿ</button><button class="scratchpad-symbol" onclick="insertScratchToken('^()')">^( )</button>
+            <button class="scratchpad-symbol" onclick="insertScratchToken('sin(')">sin(</button><button class="scratchpad-symbol" onclick="insertScratchToken('cos(')">cos(</button><button class="scratchpad-symbol" onclick="insertScratchToken('tg(')">tg(</button><button class="scratchpad-symbol" onclick="insertScratchToken('ctg(')">ctg(</button>
+            <button class="scratchpad-symbol" onclick="insertScratchToken('arcsin(')">arcsin(</button><button class="scratchpad-symbol" onclick="insertScratchToken('arccos(')">arccos(</button><button class="scratchpad-symbol" onclick="insertScratchToken('arctg(')">arctg(</button><button class="scratchpad-symbol" onclick="insertScratchToken('arcctg(')">arcctg(</button>
+            <button class="scratchpad-symbol" onclick="insertScratchToken('≠')">≠</button><button class="scratchpad-symbol" onclick="insertScratchToken('≤')">≤</button><button class="scratchpad-symbol" onclick="insertScratchToken('≥')">≥</button><button class="scratchpad-symbol" onclick="insertScratchToken('≈')">≈</button>
+            <button class="scratchpad-symbol" onclick="insertScratchToken('±')">±</button><button class="scratchpad-symbol" onclick="insertScratchToken('∞')">∞</button><button class="scratchpad-symbol" onclick="insertScratchToken('·')">·</button><button class="scratchpad-symbol" onclick="insertScratchToken('÷')">÷</button>
+            <button class="scratchpad-symbol" onclick="insertScratchToken('(')">(</button><button class="scratchpad-symbol" onclick="insertScratchToken(')')">)</button><button class="scratchpad-symbol" onclick="insertScratchToken('=')">=</button><button class="scratchpad-symbol" onclick="insertScratchToken('→')">→</button>
+          </div>
+          <textarea id="scratchpad-text" placeholder="Записывай вычисления, формулы и промежуточные шаги…"></textarea>
+          <p class="text-xs text-slate-500">Это свободный черновик: записи не проверяются и не влияют на баллы.</p>
+        </section>
+      </div>
+      <footer class="flex items-center justify-between gap-3 border-t border-slate-200 px-4 py-3">
+        <span class="text-xs text-slate-500">Черновик не отправляется в ответы теста</span>
+        <button onclick="closeScratchpad()" class="rounded-xl bg-indigo-600 px-5 py-3 text-sm font-bold text-white">Готово</button>
+      </footer>
+    </div>
+  </div>`;
+  document.body.insertAdjacentHTML('beforeend', markup);
+  scratchpadCreated = true;
+  const overlay = document.getElementById('scratchpad-overlay');
+  const viewport = document.getElementById('scratchpad-viewport');
+  overlay.addEventListener('click', event => { if (event.target === overlay) closeScratchpad(); });
+  viewport.addEventListener('pointerdown', handleScratchPointerDown);
+  viewport.addEventListener('pointermove', handleScratchPointerMove);
+  viewport.addEventListener('pointerup', handleScratchPointerUp);
+  viewport.addEventListener('pointercancel', handleScratchPointerUp);
+  viewport.addEventListener('lostpointercapture', handleScratchPointerUp);
+  window.addEventListener('resize', handleScratchResize);
+  scratchBaseWidth = Math.max(280, Math.floor(viewport.clientWidth || window.innerWidth - 32));
+  scratchBaseHeight = Math.max(280, Math.min(560, Math.floor(window.innerHeight * 0.46)));
+  renderScratchCanvas();
+}
+
+function openScratchpad() {
+  ensureScratchpad();
+  document.getElementById('scratchpad-overlay').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  requestAnimationFrame(() => {
+    const viewport = document.getElementById('scratchpad-viewport');
+    if (!viewport) return;
+    scratchBaseWidth = Math.max(280, Math.floor(viewport.clientWidth || window.innerWidth - 32));
+    if (scratchStrokes.length === 0) scratchBaseHeight = Math.max(280, Math.min(560, Math.floor(window.innerHeight * 0.46)));
+    renderScratchCanvas();
+  });
+}
+
+function closeScratchpad() {
+  const overlay = document.getElementById('scratchpad-overlay');
+  if (overlay) overlay.classList.add('hidden');
+  document.body.style.overflow = '';
+  scratchPointers.clear();
+  scratchCurrentStroke = null;
+}
+
+function setScratchpadTab(tab) {
+  scratchpadTab = tab === 'text' ? 'text' : 'draw';
+  const drawPanel = document.getElementById('scratch-draw-panel');
+  const textPanel = document.getElementById('scratch-text-panel');
+  const drawTab = document.getElementById('scratch-tab-draw');
+  const textTab = document.getElementById('scratch-tab-text');
+  if (!drawPanel) return;
+  drawPanel.classList.toggle('hidden', scratchpadTab !== 'draw');
+  textPanel.classList.toggle('hidden', scratchpadTab !== 'text');
+  drawTab.classList.toggle('active', scratchpadTab === 'draw');
+  textTab.classList.toggle('active', scratchpadTab === 'text');
+  if (scratchpadTab === 'draw') requestAnimationFrame(() => {
+    const viewport = document.getElementById('scratchpad-viewport');
+    if (viewport) scratchBaseWidth = Math.max(280, Math.floor(viewport.clientWidth || window.innerWidth - 32));
+    renderScratchCanvas();
+  });
+}
+
+function setScratchTool(tool) {
+  scratchTool = ['pen','eraser','pan'].includes(tool) ? tool : 'pen';
+  ['pen','eraser','pan'].forEach(name => {
+    const button = document.getElementById('scratch-tool-' + name);
+    if (button) button.classList.toggle('active', scratchTool === name);
+  });
+  const canvas = document.getElementById('scratchpad-canvas');
+  if (canvas) canvas.style.cursor = scratchTool === 'pan' ? 'grab' : scratchTool === 'eraser' ? 'cell' : 'crosshair';
+}
+function setScratchColor(color) { if (/^#[0-9a-f]{6}$/i.test(color)) scratchColor = color; }
+function setScratchBrushSize(value) {
+  scratchBrushSize = Math.max(1, Math.min(12, Number(value) || 3));
+  const label = document.getElementById('scratch-size-label');
+  if (label) label.textContent = String(scratchBrushSize);
+}
+function setScratchBackground(value) {
+  scratchBackground = ['plain','ruled','grid'].includes(value) ? value : 'plain';
+  renderScratchCanvas();
+}
+function changeScratchZoom(delta) {
+  const viewport = document.getElementById('scratchpad-viewport');
+  if (!viewport) return;
+  const previousZoom = scratchZoom;
+  scratchZoom = Math.max(.6, Math.min(2.4, Math.round((scratchZoom + delta) * 10) / 10));
+  const label = document.getElementById('scratch-zoom-label');
+  if (label) label.textContent = Math.round(scratchZoom * 100) + '%';
+  const oldLeft = viewport.scrollLeft, oldTop = viewport.scrollTop;
+  renderScratchCanvas();
+  viewport.scrollLeft = oldLeft * scratchZoom / previousZoom;
+  viewport.scrollTop = oldTop * scratchZoom / previousZoom;
+}
+function scratchUndo() { if (scratchStrokes.length) { scratchRedo.push(scratchStrokes.pop()); renderScratchCanvas(); } }
+function scratchRedoAction() { if (scratchRedo.length) { scratchStrokes.push(scratchRedo.pop()); renderScratchCanvas(); } }
+function scratchClear() {
+  if (!scratchStrokes.length) return;
+  if (confirm('Очистить весь рукописный черновик?')) { scratchStrokes = []; scratchRedo = []; renderScratchCanvas(); }
+}
+function insertScratchToken(token) {
+  const textarea = document.getElementById('scratchpad-text');
+  if (!textarea) return;
+  const start = textarea.selectionStart ?? textarea.value.length;
+  const end = textarea.selectionEnd ?? start;
+  textarea.setRangeText(token, start, end, 'end');
+  textarea.focus();
+}
+function handleScratchResize() {
+  if (!scratchpadCreated) return;
+  const overlay = document.getElementById('scratchpad-overlay');
+  const viewport = document.getElementById('scratchpad-viewport');
+  if (!overlay || overlay.classList.contains('hidden') || !viewport) return;
+  scratchBaseWidth = Math.max(280, Math.floor(viewport.clientWidth || window.innerWidth - 32));
+  scratchBaseHeight = Math.max(260, Math.min(560, Math.floor(window.innerHeight * 0.46)));
+  renderScratchCanvas();
+}
+function scratchPoint(event) {
+  const canvas = document.getElementById('scratchpad-canvas');
+  const rect = canvas.getBoundingClientRect();
+  return {x:Math.max(0,Math.min(1,(event.clientX-rect.left)/Math.max(1,rect.width))),y:Math.max(0,Math.min(1,(event.clientY-rect.top)/Math.max(1,rect.height)))};
+}
+function handleScratchPointerDown(event) {
+  const viewport = document.getElementById('scratchpad-viewport');
+  const canvas = document.getElementById('scratchpad-canvas');
+  const overlay = document.getElementById('scratchpad-overlay');
+  if (!viewport || !canvas || !overlay || overlay.classList.contains('hidden') || scratchpadTab !== 'draw') return;
+  if (scratchTool === 'pen' || scratchTool === 'eraser') {
+    if (event.target !== canvas) return;
+    event.preventDefault();
+    viewport.setPointerCapture?.(event.pointerId);
+    scratchCurrentStroke = {tool:scratchTool,color:scratchColor,size:scratchTool==='eraser'?scratchBrushSize*4+8:scratchBrushSize,points:[scratchPoint(event)],pointerId:event.pointerId};
+    scratchStrokes.push(scratchCurrentStroke);
+    scratchRedo = [];
+    queueScratchRender();
+    return;
+  }
+  if (scratchTool === 'pan') {
+    event.preventDefault();
+    viewport.setPointerCapture?.(event.pointerId);
+    scratchPointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+    if(scratchPointers.size===1){
+      scratchPanAnchor={x:event.clientX,y:event.clientY,left:viewport.scrollLeft,top:viewport.scrollTop};
+      scratchPinchAnchor=null;
+    } else if(scratchPointers.size===2){
+      const pts=[...scratchPointers.values()];
+      scratchPinchAnchor={distance:Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y),zoom:scratchZoom};
+      scratchPanAnchor=null;
+    }
+  }
+}
+function handleScratchPointerMove(event) {
+  const overlay=document.getElementById('scratchpad-overlay');
+  if(!scratchpadCreated || !overlay || overlay.classList.contains('hidden'))return;
+  const viewport=document.getElementById('scratchpad-viewport');
+  if(scratchCurrentStroke && scratchCurrentStroke.pointerId===event.pointerId && (scratchTool==='pen'||scratchTool==='eraser')){
+    event.preventDefault();
+    scratchCurrentStroke.points.push(scratchPoint(event));
+    queueScratchRender();
+    return;
+  }
+  if(scratchTool!=='pan'||!scratchPointers.has(event.pointerId))return;
+  event.preventDefault();
+  scratchPointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+  if(scratchPointers.size>=2 && scratchPinchAnchor){
+    const pts=[...scratchPointers.values()];
+    const dist=Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y);
+    const next=Math.max(.6,Math.min(2.4,scratchPinchAnchor.zoom*dist/Math.max(1,scratchPinchAnchor.distance)));
+    changeScratchZoom(next-scratchZoom);
+  } else if(scratchPointers.size===1 && scratchPanAnchor){
+    const pt=scratchPointers.get(event.pointerId);
+    viewport.scrollLeft=scratchPanAnchor.left-(pt.x-scratchPanAnchor.x);
+    viewport.scrollTop=scratchPanAnchor.top-(pt.y-scratchPanAnchor.y);
+  }
+}
+function handleScratchPointerUp(event) {
+  if(!scratchpadCreated)return;
+  if(scratchCurrentStroke && scratchCurrentStroke.pointerId===event.pointerId)scratchCurrentStroke=null;
+  scratchPointers.delete(event.pointerId);
+  const viewport=document.getElementById('scratchpad-viewport');
+  if(scratchTool==='pan'&&viewport){
+    if(scratchPointers.size===1){
+      const pt=[...scratchPointers.values()][0];
+      scratchPanAnchor={x:pt.x,y:pt.y,left:viewport.scrollLeft,top:viewport.scrollTop};
+      scratchPinchAnchor=null;
+    } else {scratchPanAnchor=null;scratchPinchAnchor=null;}
+  }
+  queueScratchRender();
+}
+function queueScratchRender() {
+  if(scratchRenderQueued)return;
+  scratchRenderQueued=true;
+  requestAnimationFrame(()=>{scratchRenderQueued=false;renderScratchCanvas();});
+}
+function renderScratchCanvas() {
+  const canvas=document.getElementById('scratchpad-canvas');
+  const viewport=document.getElementById('scratchpad-viewport');
+  if(!canvas||!viewport)return;
+  const dpr=Math.max(1,Math.min(3,window.devicePixelRatio||1));
+  const cssWidth=Math.max(1,Math.round(scratchBaseWidth*scratchZoom));
+  const cssHeight=Math.max(1,Math.round(scratchBaseHeight*scratchZoom));
+  canvas.style.width=cssWidth+'px';
+  canvas.style.height=cssHeight+'px';
+  const pixelWidth=Math.round(cssWidth*dpr),pixelHeight=Math.round(cssHeight*dpr);
+  if(canvas.width!==pixelWidth)canvas.width=pixelWidth;
+  if(canvas.height!==pixelHeight)canvas.height=pixelHeight;
+  const ctx=canvas.getContext('2d');if(!ctx)return;
+  ctx.setTransform(dpr*scratchZoom,0,0,dpr*scratchZoom,0,0);
+  ctx.clearRect(0,0,scratchBaseWidth,scratchBaseHeight);
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,scratchBaseWidth,scratchBaseHeight);
+  if(scratchBackground==='grid'||scratchBackground==='ruled'){
+    ctx.beginPath();ctx.strokeStyle=scratchBackground==='grid'?'#e0e7ff':'#dbeafe';ctx.lineWidth=.8;
+    const step=26;
+    for(let x=step;x<scratchBaseWidth;x+=step)if(scratchBackground==='grid'){ctx.moveTo(x,0);ctx.lineTo(x,scratchBaseHeight);}
+    for(let y=step;y<scratchBaseHeight;y+=step){ctx.moveTo(0,y);ctx.lineTo(scratchBaseWidth,y);}
+    ctx.stroke();
+  }
+  ctx.lineCap='round';ctx.lineJoin='round';
+  scratchStrokes.forEach(stroke=>{
+    if(!stroke.points||!stroke.points.length)return;
+    ctx.save();ctx.globalCompositeOperation=stroke.tool==='eraser'?'destination-out':'source-over';ctx.strokeStyle=stroke.color;ctx.fillStyle=stroke.color;ctx.lineWidth=stroke.size;
+    const first=stroke.points[0];ctx.beginPath();ctx.moveTo(first.x*scratchBaseWidth,first.y*scratchBaseHeight);
+    if(stroke.points.length===1)ctx.lineTo(first.x*scratchBaseWidth+.01,first.y*scratchBaseHeight+.01);
+    else for(let i=1;i<stroke.points.length;i++)ctx.lineTo(stroke.points[i].x*scratchBaseWidth,stroke.points[i].y*scratchBaseHeight);
+    ctx.stroke();ctx.restore();
+  });
+  const label=document.getElementById('scratch-zoom-label');if(label)label.textContent=Math.round(scratchZoom*100)+'%';
+}
+
 function render() {
   const app = document.getElementById('app');
 
@@ -1697,6 +2029,12 @@ function render() {
     }
     app.innerHTML = `
       <div class="space-y-6">
+        <div class="flex justify-end">
+          <button onclick="openScratchpad()" class="inline-flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-bold text-indigo-800 shadow-sm hover:bg-indigo-100">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-5 w-5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m14 5 5 5M4 20l4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20z"/></svg>
+            Черновик
+          </button>
+        </div>
         ${testMode === 'error' ? `<button onclick="exitErrorPractice()" class="w-full sm:w-auto text-slate-600 hover:text-slate-900 font-semibold text-sm flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100">${BACK_BTN}<span>Выйти из отработки</span></button>` : testKind === 'infinite' ? `<button onclick="finishInfinitePractice()" class="w-full sm:w-auto text-slate-600 hover:text-slate-900 font-semibold text-sm flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100"><span>Завершить практику</span><span class="text-xs text-slate-500">(<span id="infinite-answered-count">${infiniteAnsweredCount}</span> отвечено)</span></button>` : ''}
         <div class="space-y-2">
           <div class="flex justify-between text-xs font-semibold text-slate-500 items-center">
