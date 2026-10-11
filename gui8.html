@@ -63,7 +63,12 @@ mjx-container { -webkit-user-select: none; user-select: none; }
 #scratchpad-canvas { display: block; background: white; touch-action: none; }
 .scratchpad-symbols { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: .4rem; }
 .scratchpad-symbol { min-width: 0; min-height: 38px; padding: .45rem .15rem; border: 1px solid #cbd5e1; border-radius: .55rem; background: #f8fafc; color: #1e293b; font-size: .9rem; font-weight: 600; }
-#scratchpad-text { width: 100%; min-height: 35dvh; resize: vertical; border: 1px solid #cbd5e1; border-radius: .8rem; padding: .9rem; color: #0f172a; background: white; font: 1rem/1.8 ui-monospace, SFMono-Regular, Consolas, monospace; }
+#scratchpad-text, .scratchpad-textarea { display:block; width:100%; min-height:22dvh; max-height:48dvh; resize:vertical; border:1px solid #cbd5e1; border-radius:.8rem; padding:.9rem; color:#0f172a; background:#fff; font:1rem/1.8 ui-monospace,SFMono-Regular,Consolas,monospace; }
+.tip-plain-formula { display:block; box-sizing:border-box; width:100%; max-width:100%; margin:.55rem 0; padding:.7rem .8rem; border:1px solid #dbeafe; border-radius:.7rem; background:#eff6ff; white-space:normal; overflow-wrap:anywhere; word-break:normal; line-height:1.6; }
+.tip-topic-filters { display:flex; flex-wrap:wrap; gap:.45rem; margin:.75rem 0 1rem; }
+.tip-topic-chip { border:1px solid #cbd5e1; border-radius:999px; padding:.5rem .8rem; background:#fff; color:#475569; font-size:.8rem; font-weight:700; }
+.tip-topic-chip.active { border-color:#4f46e5; background:#eef2ff; color:#3730a3; }
+.tip-geometry-legend { display:grid; grid-template-columns:1fr; gap:.35rem; padding:.75rem; border-radius:.75rem; background:#f8fafc; border:1px solid #e2e8f0; }
 @media (max-width: 520px) {
   .scratchpad-overlay { align-items: flex-end; padding: 0; }
   .scratchpad-dialog { width: 100%; max-height: 96dvh; border-radius: 1.2rem 1.2rem 0 0; }
@@ -254,6 +259,7 @@ let currentPracticeSession = null;
 let lastPracticeClosed = 0;
 let multiSelection = new Set();
 let materialsTab = 'score';
+let selectedTipsTopic = 'all';
 let infinitePracticeSkillId = null;
 let infinitePracticeTopicLabel = null;
 let infinitePracticeTitle = '';
@@ -627,6 +633,7 @@ function finishInfinitePractice() {
   }
   testKind = 'infinite-finished';
   currentTestLabel = 'Бесконечная практика: ' + infinitePracticeTitle;
+  clearScratchpadData();
   currentScreen = 'result-screen';
   render();
 }
@@ -634,6 +641,10 @@ function openTestConfig() { currentScreen = 'config-test-screen'; render(); }
 function openMaterials() { currentScreen = 'materials-screen'; render(); }
 function setMaterialsTab(tab) {
   materialsTab = tab === 'tips' ? 'tips' : 'score';
+  render();
+}
+function setTipsTopic(topic) {
+  selectedTipsTopic = String(topic || 'all');
   render();
 }
 function openTopicsMenu() { currentScreen = 'topics-menu'; render(); }
@@ -708,6 +719,7 @@ function startTimerInterval() {
       clearInterval(timerInterval);
       timerInterval = null;
       alert('Время вышло!');
+      clearScratchpadData();
       currentScreen = 'result-screen';
       render();
     }
@@ -1372,6 +1384,7 @@ function nextQuestion() {
   } else {
     if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
     if (testMode === 'error') finishErrorPracticeSession(false);
+    clearScratchpadData();
     currentScreen = 'result-screen';
     render();
   }
@@ -1504,18 +1517,33 @@ function ensureScratchpad() {
           </div>
         </section>
         <section id="scratch-text-panel" class="hidden space-y-3">
-          <p class="text-sm leading-6 text-slate-600">Поле вызывает обычную клавиатуру телефона. Кнопки ниже вставляют распространённые математические символы и функции в место курсора.</p>
-          <div class="scratchpad-symbols">
-            <button class="scratchpad-symbol" onclick="insertScratchToken('x')">x</button><button class="scratchpad-symbol" onclick="insertScratchToken('y')">y</button><button class="scratchpad-symbol" onclick="insertScratchToken('z')">z</button><button class="scratchpad-symbol" onclick="insertScratchToken('π')">π</button>
-            <button class="scratchpad-symbol" onclick="insertScratchToken('√()')">√()</button><button class="scratchpad-symbol" onclick="insertScratchToken('²')">²</button><button class="scratchpad-symbol" onclick="insertScratchToken('ⁿ')">ⁿ</button><button class="scratchpad-symbol" onclick="insertScratchToken('^()')">^( )</button>
-            <button class="scratchpad-symbol" onclick="insertScratchToken('sin(')">sin(</button><button class="scratchpad-symbol" onclick="insertScratchToken('cos(')">cos(</button><button class="scratchpad-symbol" onclick="insertScratchToken('tg(')">tg(</button><button class="scratchpad-symbol" onclick="insertScratchToken('ctg(')">ctg(</button>
-            <button class="scratchpad-symbol" onclick="insertScratchToken('arcsin(')">arcsin(</button><button class="scratchpad-symbol" onclick="insertScratchToken('arccos(')">arccos(</button><button class="scratchpad-symbol" onclick="insertScratchToken('arctg(')">arctg(</button><button class="scratchpad-symbol" onclick="insertScratchToken('arcctg(')">arcctg(</button>
-            <button class="scratchpad-symbol" onclick="insertScratchToken('≠')">≠</button><button class="scratchpad-symbol" onclick="insertScratchToken('≤')">≤</button><button class="scratchpad-symbol" onclick="insertScratchToken('≥')">≥</button><button class="scratchpad-symbol" onclick="insertScratchToken('≈')">≈</button>
-            <button class="scratchpad-symbol" onclick="insertScratchToken('±')">±</button><button class="scratchpad-symbol" onclick="insertScratchToken('∞')">∞</button><button class="scratchpad-symbol" onclick="insertScratchToken('·')">·</button><button class="scratchpad-symbol" onclick="insertScratchToken('÷')">÷</button>
-            <button class="scratchpad-symbol" onclick="insertScratchToken('(')">(</button><button class="scratchpad-symbol" onclick="insertScratchToken(')')">)</button><button class="scratchpad-symbol" onclick="insertScratchToken('=')">=</button><button class="scratchpad-symbol" onclick="insertScratchToken('→')">→</button>
+          <p class="text-sm leading-6 text-slate-600">Записывай решение обычной клавиатурой. Редкие математические знаки и функции можно вставить кнопками под полем.</p>
+          <textarea id="scratchpad-text" placeholder="Записывай вычисления, формулы и промежуточные шаги…" class="scratchpad-textarea"></textarea>
+          <div class="space-y-2"><p class="text-xs font-bold uppercase tracking-wide text-slate-500">Математические символы</p>
+            <div class="scratchpad-symbols">
+              <button class="scratchpad-symbol" onclick="insertScratchToken('π')">π</button>
+              <button class="scratchpad-symbol" onclick="insertScratchToken('√()')">√()</button>
+              <button class="scratchpad-symbol" onclick="insertScratchToken('^()')">^( )</button>
+              <button class="scratchpad-symbol" onclick="insertScratchToken('²')">²</button>
+              <button class="scratchpad-symbol" onclick="insertScratchToken('³')">³</button>
+              <button class="scratchpad-symbol" onclick="insertScratchToken('ⁿ')">ⁿ</button>
+              <button class="scratchpad-symbol" onclick="insertScratchToken('sin(')">sin(</button>
+              <button class="scratchpad-symbol" onclick="insertScratchToken('cos(')">cos(</button>
+              <button class="scratchpad-symbol" onclick="insertScratchToken('tg(')">tg(</button>
+              <button class="scratchpad-symbol" onclick="insertScratchToken('ctg(')">ctg(</button>
+              <button class="scratchpad-symbol" onclick="insertScratchToken('arcsin(')">arcsin(</button>
+              <button class="scratchpad-symbol" onclick="insertScratchToken('arccos(')">arccos(</button>
+              <button class="scratchpad-symbol" onclick="insertScratchToken('arctg(')">arctg(</button>
+              <button class="scratchpad-symbol" onclick="insertScratchToken('arcctg(')">arcctg(</button>
+              <button class="scratchpad-symbol" onclick="insertScratchToken('≠')">≠</button>
+              <button class="scratchpad-symbol" onclick="insertScratchToken('≤')">≤</button>
+              <button class="scratchpad-symbol" onclick="insertScratchToken('≥')">≥</button>
+              <button class="scratchpad-symbol" onclick="insertScratchToken('±')">±</button>
+              <button class="scratchpad-symbol" onclick="insertScratchToken('∞')">∞</button>
+              <button class="scratchpad-symbol" onclick="insertScratchToken('→')">→</button>
+            </div>
           </div>
-          <textarea id="scratchpad-text" placeholder="Записывай вычисления, формулы и промежуточные шаги…"></textarea>
-          <p class="text-xs text-slate-500">Это свободный черновик: записи не проверяются и не влияют на баллы.</p>
+          <p class="text-xs text-slate-500">Черновик свободный: записи не проверяются и не влияют на баллы.</p>
         </section>
       </div>
       <footer class="flex items-center justify-between gap-3 border-t border-slate-200 px-4 py-3">
@@ -1547,8 +1575,10 @@ function openScratchpad() {
   requestAnimationFrame(() => {
     const viewport = document.getElementById('scratchpad-viewport');
     if (!viewport) return;
-    scratchBaseWidth = Math.max(280, Math.floor(viewport.clientWidth || window.innerWidth - 32));
-    if (scratchStrokes.length === 0) scratchBaseHeight = Math.max(280, Math.min(560, Math.floor(window.innerHeight * 0.46)));
+    if (scratchStrokes.length === 0) {
+      scratchBaseWidth = Math.max(280, Math.floor(viewport.clientWidth || window.innerWidth - 32));
+      scratchBaseHeight = Math.max(280, Math.min(560, Math.floor(window.innerHeight * 0.46)));
+    }
     renderScratchCanvas();
   });
 }
@@ -1559,6 +1589,23 @@ function closeScratchpad() {
   document.body.style.overflow = '';
   scratchPointers.clear();
   scratchCurrentStroke = null;
+}
+
+function clearScratchpadData() {
+  scratchStrokes = [];
+  scratchRedo = [];
+  scratchCurrentStroke = null;
+  scratchPointers.clear();
+  scratchPanAnchor = null;
+  scratchPinchAnchor = null;
+  scratchZoom = 1;
+  const textarea = document.getElementById('scratchpad-text');
+  if (textarea) textarea.value = '';
+  const viewport = document.getElementById('scratchpad-viewport');
+  scratchBaseWidth = Math.max(280, Math.floor((viewport && viewport.clientWidth) || (window.innerWidth - 48)));
+  scratchBaseHeight = Math.max(280, Math.min(560, Math.floor(window.innerHeight * 0.46)));
+  if (viewport) { viewport.scrollLeft = 0; viewport.scrollTop = 0; }
+  renderScratchCanvas();
 }
 
 function setScratchpadTab(tab) {
@@ -1574,7 +1621,7 @@ function setScratchpadTab(tab) {
   textTab.classList.toggle('active', scratchpadTab === 'text');
   if (scratchpadTab === 'draw') requestAnimationFrame(() => {
     const viewport = document.getElementById('scratchpad-viewport');
-    if (viewport) scratchBaseWidth = Math.max(280, Math.floor(viewport.clientWidth || window.innerWidth - 32));
+    if (viewport && scratchStrokes.length === 0) scratchBaseWidth = Math.max(280, Math.floor(viewport.clientWidth || window.innerWidth - 32));
     renderScratchCanvas();
   });
 }
@@ -1629,14 +1676,36 @@ function handleScratchResize() {
   const overlay = document.getElementById('scratchpad-overlay');
   const viewport = document.getElementById('scratchpad-viewport');
   if (!overlay || overlay.classList.contains('hidden') || !viewport) return;
-  scratchBaseWidth = Math.max(280, Math.floor(viewport.clientWidth || window.innerWidth - 32));
-  scratchBaseHeight = Math.max(260, Math.min(560, Math.floor(window.innerHeight * 0.46)));
+  if (scratchStrokes.length === 0) {
+    scratchBaseWidth = Math.max(280, Math.floor(viewport.clientWidth || window.innerWidth - 32));
+    scratchBaseHeight = Math.max(260, Math.min(560, Math.floor(window.innerHeight * 0.46)));
+  }
   renderScratchCanvas();
 }
 function scratchPoint(event) {
   const canvas = document.getElementById('scratchpad-canvas');
   const rect = canvas.getBoundingClientRect();
   return {x:Math.max(0,Math.min(1,(event.clientX-rect.left)/Math.max(1,rect.width))),y:Math.max(0,Math.min(1,(event.clientY-rect.top)/Math.max(1,rect.height)))};
+}
+
+function extendScratchCanvasForPoint(point) {
+  if (!point) return false;
+  const oldWidth = scratchBaseWidth, oldHeight = scratchBaseHeight;
+  let nextWidth = oldWidth, nextHeight = oldHeight;
+  if (point.x * oldWidth > oldWidth - 85 && oldWidth < 4000) nextWidth = Math.min(4000, oldWidth + Math.max(320, Math.round(oldWidth * .45)));
+  if (point.y * oldHeight > oldHeight - 85 && oldHeight < 5000) nextHeight = Math.min(5000, oldHeight + Math.max(360, Math.round(oldHeight * .45)));
+  while (nextWidth * nextHeight > 16000000) {
+    if (nextHeight > oldHeight) nextHeight = Math.max(oldHeight, nextHeight - 250);
+    else if (nextWidth > oldWidth) nextWidth = Math.max(oldWidth, nextWidth - 250);
+    else break;
+  }
+  if (nextWidth === oldWidth && nextHeight === oldHeight) return false;
+  const sx = oldWidth / nextWidth, sy = oldHeight / nextHeight;
+  scratchStrokes.forEach(stroke => (stroke.points || []).forEach(p => { p.x *= sx; p.y *= sy; }));
+  scratchBaseWidth = nextWidth;
+  scratchBaseHeight = nextHeight;
+  renderScratchCanvas();
+  return true;
 }
 function handleScratchPointerDown(event) {
   const viewport = document.getElementById('scratchpad-viewport');
@@ -1647,9 +1716,11 @@ function handleScratchPointerDown(event) {
     if (event.target !== canvas) return;
     event.preventDefault();
     viewport.setPointerCapture?.(event.pointerId);
-    scratchCurrentStroke = {tool:scratchTool,color:scratchColor,size:scratchTool==='eraser'?scratchBrushSize*4+8:scratchBrushSize,points:[scratchPoint(event)],pointerId:event.pointerId};
+    const point = scratchPoint(event);
+    scratchCurrentStroke = {tool:scratchTool,color:scratchColor,size:scratchTool==='eraser'?scratchBrushSize*4+8:scratchBrushSize,points:[point],pointerId:event.pointerId};
     scratchStrokes.push(scratchCurrentStroke);
     scratchRedo = [];
+    extendScratchCanvasForPoint(point);
     queueScratchRender();
     return;
   }
@@ -1673,7 +1744,9 @@ function handleScratchPointerMove(event) {
   const viewport=document.getElementById('scratchpad-viewport');
   if(scratchCurrentStroke && scratchCurrentStroke.pointerId===event.pointerId && (scratchTool==='pen'||scratchTool==='eraser')){
     event.preventDefault();
-    scratchCurrentStroke.points.push(scratchPoint(event));
+    const point = scratchPoint(event);
+    scratchCurrentStroke.points.push(point);
+    extendScratchCanvasForPoint(point);
     queueScratchRender();
     return;
   }
@@ -1714,16 +1787,17 @@ function renderScratchCanvas() {
   const canvas=document.getElementById('scratchpad-canvas');
   const viewport=document.getElementById('scratchpad-viewport');
   if(!canvas||!viewport)return;
-  const dpr=Math.max(1,Math.min(3,window.devicePixelRatio||1));
+  const area = Math.max(1, scratchBaseWidth * scratchBaseHeight);
+  const dpr = Math.max(1, Math.min(2.5, window.devicePixelRatio || 1, Math.sqrt(14000000 / area)));
   const cssWidth=Math.max(1,Math.round(scratchBaseWidth*scratchZoom));
   const cssHeight=Math.max(1,Math.round(scratchBaseHeight*scratchZoom));
   canvas.style.width=cssWidth+'px';
   canvas.style.height=cssHeight+'px';
-  const pixelWidth=Math.round(cssWidth*dpr),pixelHeight=Math.round(cssHeight*dpr);
+  const pixelWidth=Math.round(scratchBaseWidth*dpr),pixelHeight=Math.round(scratchBaseHeight*dpr);
   if(canvas.width!==pixelWidth)canvas.width=pixelWidth;
   if(canvas.height!==pixelHeight)canvas.height=pixelHeight;
   const ctx=canvas.getContext('2d');if(!ctx)return;
-  ctx.setTransform(dpr*scratchZoom,0,0,dpr*scratchZoom,0,0);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
   ctx.clearRect(0,0,scratchBaseWidth,scratchBaseHeight);
   ctx.fillStyle='#fff';ctx.fillRect(0,0,scratchBaseWidth,scratchBaseHeight);
   if(scratchBackground==='grid'||scratchBackground==='ruled'){
