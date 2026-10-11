@@ -303,7 +303,7 @@ function getDetailedSolutionHtml(q) {
       <div class="rounded-lg bg-white/80 border border-slate-200 p-3 text-center">$k_1=k_2,\\qquad b_1\\ne b_2.$</div>
       <p>Значит, сравниваем только коэффициенты при $x$; свободный член может быть другим.</p>`;
   } else if (id === 'trig-zero-argument') {
-    const isSine = String(q.questionText || '').includes('\\\\sin');
+    const isSine = String(q.questionText || '').includes('\\sin');
     rule = isSine
       ? `<p>На единичной окружности $\\cos x$ — координата точки по горизонтали (ось $x$), а $\\sin x$ — координата по вертикали (ось $y$).</p>
         <p>Синус равен нулю, когда точка лежит на горизонтальной оси: её вертикальная координата равна нулю.</p>
