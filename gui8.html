@@ -1621,7 +1621,21 @@ function openScratchpad() {
 
 function closeScratchpad() {
   const overlay = document.getElementById('scratchpad-overlay');
-  if (overlay) overlay.classList.add('hidden');
+  const dialog = overlay && overlay.querySelector('.scratchpad-dialog');
+  const expand = document.getElementById('scratch-expand-icon');
+  const collapse = document.getElementById('scratch-collapse-icon');
+  const button = document.getElementById('scratch-fullscreen-button');
+  if (overlay) {
+    overlay.classList.add('hidden');
+    overlay.classList.remove('scratchpad-overlay-fullscreen');
+  }
+  if (dialog) dialog.classList.remove('scratchpad-fullscreen');
+  expand && expand.classList.remove('hidden');
+  collapse && collapse.classList.add('hidden');
+  if (button) {
+    button.setAttribute('aria-label', 'Развернуть черновик на весь экран');
+    button.setAttribute('title', 'Полный экран');
+  }
   document.body.style.overflow = '';
   scratchPointers.clear();
   scratchCurrentStroke = null;
