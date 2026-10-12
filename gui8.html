@@ -1651,8 +1651,8 @@ function ensureScratchpad() {
   scratchBaseWidth = Math.max(280, Math.floor(viewport.clientWidth || window.innerWidth - 32));
   scratchBaseHeight = Math.max(1200, Math.floor(window.innerHeight * 1.2));
   renderScratchCanvas();
-  if (!scratchTextWidthCustom) scratchTextWidth = Math.max(260, Math.floor(window.innerWidth - 48));
-  if (!scratchTextHeightCustom) scratchTextHeight = Math.max(360, Math.floor(window.innerHeight * 0.48));
+  if (!scratchTextWidthCustom) scratchTextWidth = Math.max(260, Math.floor(Math.min(window.innerWidth - 48, 860)));
+  if (!scratchTextHeightCustom) scratchTextHeight = Math.max(360, Math.floor(window.innerHeight * 0.42));
   applyScratchTextDimensions();
 }
 
@@ -1840,8 +1840,8 @@ function toggleScratchFullscreen() {
     if (!scratchTextWidthCustom) scratchTextWidth = Math.max(260, Math.floor(window.innerWidth));
     if (!scratchTextHeightCustom) scratchTextHeight = Math.max(360, Math.floor(window.innerHeight));
   } else {
-    if (!scratchTextWidthCustom) scratchTextWidth = Math.max(260, Math.floor(window.innerWidth - 48));
-    if (!scratchTextHeightCustom) scratchTextHeight = Math.max(360, Math.floor(window.innerHeight * .48));
+    if (!scratchTextWidthCustom) scratchTextWidth = Math.max(260, Math.floor(Math.min(window.innerWidth - 48, 860)));
+    if (!scratchTextHeightCustom) scratchTextHeight = Math.max(360, Math.floor(window.innerHeight * .42));
   }
   applyScratchTextDimensions();
   expand && expand.classList.toggle('hidden', fullscreen);
