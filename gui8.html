@@ -1678,6 +1678,7 @@ function openScratchpad() {
 function closeScratchpad() {
   const overlay = document.getElementById('scratchpad-overlay');
   const dialog = overlay && overlay.querySelector('.scratchpad-dialog');
+  const wasFullscreen = !!(dialog && dialog.classList.contains('scratchpad-fullscreen'));
   const expand = document.getElementById('scratch-expand-icon');
   const collapse = document.getElementById('scratch-collapse-icon');
   const button = document.getElementById('scratch-fullscreen-button');
@@ -1691,6 +1692,11 @@ function closeScratchpad() {
   if (button) {
     button.setAttribute('aria-label', 'Развернуть черновик на весь экран');
     button.setAttribute('title', 'Полный экран');
+  }
+  if (wasFullscreen) {
+    if (!scratchTextWidthCustom) scratchTextWidth = Math.max(260, Math.floor(Math.min(window.innerWidth - 48, 860)));
+    if (!scratchTextHeightCustom) scratchTextHeight = Math.max(360, Math.floor(window.innerHeight * .48));
+    applyScratchTextDimensions();
   }
   document.body.style.overflow = '';
   scratchPointers.clear();
@@ -1844,6 +1850,12 @@ function toggleScratchFullscreen() {
   button.setAttribute('title', fullscreen ? 'Свернуть' : 'Полный экран');
   requestAnimationFrame(() => {
     const viewport = document.getElementById('scratchpad-viewport');
+    const textWorkspace = document.getElementById('scratch-text-workspace');
+    if (fullscreen && textWorkspace) {
+      if (!scratchTextWidthCustom) scratchTextWidth = Math.max(260, Math.floor(textWorkspace.clientWidth));
+      if (!scratchTextHeightCustom) scratchTextHeight = Math.max(220, Math.floor(textWorkspace.clientHeight));
+      applyScratchTextDimensions();
+    }
     if (viewport) {
       if (scratchStrokes.length === 0) scratchBaseWidth = Math.max(280, Math.floor(viewport.clientWidth || window.innerWidth - 32));
       renderScratchCanvas();
