@@ -53,7 +53,17 @@ mjx-container { -webkit-user-select: none; user-select: none; }
 .topic-panel { border:1px solid #e2e8f0; background:#fff; border-radius:1rem; padding:1rem; }
 .scratchpad-overlay { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; background: rgba(15,23,42,.58); padding: .75rem; }
 .scratchpad-overlay.hidden { display: none; }
+.scratchpad-overlay.scratchpad-overlay-fullscreen { padding: 0; align-items: stretch; }
 .scratchpad-dialog { width: min(100%, 900px); max-height: 96dvh; display: flex; flex-direction: column; overflow: hidden; border-radius: 1.2rem; background: white; box-shadow: 0 24px 70px rgba(15,23,42,.3); }
+.scratchpad-dialog.scratchpad-fullscreen { width: 100vw; height: 100dvh; max-height: 100dvh; border-radius: 0; }
+.scratchpad-dialog.scratchpad-fullscreen .scratchpad-scroll { flex: 1; min-height: 0; overflow: auto; }
+.scratchpad-dialog.scratchpad-fullscreen #scratch-text-panel:not(.hidden) { display: flex; flex: 1; flex-direction: column; min-height: 0; }
+.scratchpad-dialog.scratchpad-fullscreen #scratchpad-text { flex: 1; min-height: 0; max-height: none; resize: none; }
+.scratchpad-dialog.scratchpad-fullscreen #scratch-draw-panel:not(.hidden) { display: flex; flex: 1; flex-direction: column; min-height: 0; }
+.scratchpad-dialog.scratchpad-fullscreen #scratch-draw-panel > .scratchpad-toolbar:first-child { order: 3; }
+.scratchpad-dialog.scratchpad-fullscreen #scratch-draw-panel > .scratchpad-toolbar:nth-child(2) { order: 4; }
+.scratchpad-dialog.scratchpad-fullscreen #scratch-draw-panel > p { order: 2; }
+.scratchpad-dialog.scratchpad-fullscreen #scratchpad-viewport { order: 1; flex: 1; height: auto; min-height: 160px; max-height: none; }
 .scratchpad-scroll { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
 .scratchpad-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: .45rem; }
 .scratchpad-tool { min-height: 38px; padding: .5rem .7rem; border: 1px solid #cbd5e1; border-radius: .65rem; background: #fff; color: #334155; font-size: .82rem; font-weight: 650; }
@@ -63,29 +73,8 @@ mjx-container { -webkit-user-select: none; user-select: none; }
 #scratchpad-canvas { display: block; background: white; touch-action: none; }
 .scratchpad-symbols { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: .4rem; }
 .scratchpad-symbol { min-width: 0; min-height: 38px; padding: .45rem .15rem; border: 1px solid #cbd5e1; border-radius: .55rem; background: #f8fafc; color: #1e293b; font-size: .9rem; font-weight: 600; }
-#scratchpad-text, .scratchpad-textarea { display:block; width:100%; min-height:22dvh; max-height:48dvh; resize:vertical; border:1px solid #cbd5e1; border-radius:.8rem; padding:.9rem; color:#0f172a; background:#fff; font:1rem/1.8 ui-monospace,SFMono-Regular,Consolas,monospace; }
-.scratchpad-overlay.scratchpad-overlay-fullscreen { padding:0; }
-.scratchpad-dialog.scratchpad-fullscreen { width:100vw; height:100dvh; max-height:100dvh; border-radius:0; }
-.scratchpad-dialog.scratchpad-fullscreen .scratchpad-scroll { flex:1; min-height:0; }
-.scratch-text-tools { display:flex; align-items:center; flex-wrap:wrap; gap:.4rem; }
-.scratch-text-workspace { height:320px; min-height:220px; overflow:auto; overscroll-behavior:contain; border:1px solid #cbd5e1; border-radius:.85rem; background-color:#fff; background-image:linear-gradient(#e2e8f0 1px,transparent 1px),linear-gradient(90deg,#e2e8f0 1px,transparent 1px); background-size:24px 24px; touch-action:pan-x pan-y; }
-.scratch-text-board { position:relative; width:100%; min-width:100%; min-height:900px; }
-.scratch-text-hint { position:sticky; top:10px; z-index:0; width:max-content; max-width:calc(100% - 24px); margin:10px 12px; padding:.4rem .6rem; border-radius:.5rem; background:rgba(255,255,255,.88); color:#64748b; font-size:.78rem; pointer-events:none; }
-.scratch-text-note { position:absolute; z-index:1; box-sizing:border-box; min-width:120px; min-height:80px; max-width:none; resize:both; overflow:auto; padding:.9rem .65rem .6rem; border:1px solid #94a3b8; border-radius:.65rem; outline:none; color:#0f172a; background:rgba(255,255,255,.94); box-shadow:0 2px 6px rgba(15,23,42,.07); font-family:ui-monospace,SFMono-Regular,Consolas,monospace; line-height:1.65; white-space:pre-wrap; overflow-wrap:anywhere; }
-.scratch-text-note:focus { z-index:2; border-color:#6366f1; box-shadow:0 0 0 2px rgba(99,102,241,.16); }
-.scratch-text-symbols { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:.3rem; }
-.scratch-text-symbols .scratchpad-symbol { min-height:34px; padding:.3rem .1rem; font-size:.82rem; }
-.scratch-fullscreen-button { display:flex; width:100%; align-items:center; justify-content:center; gap:.55rem; padding:.7rem .9rem; border:1px solid #c7d2fe; border-radius:.75rem; background:#eef2ff; color:#3730a3; font-weight:750; font-size:.9rem; }
-.scratchpad-dialog.scratchpad-fullscreen .scratchpad-scroll.scratch-text-layout { display:flex; flex-direction:column; overflow:hidden; }
-.scratchpad-dialog.scratchpad-fullscreen .scratchpad-scroll.scratch-text-layout #scratch-text-panel:not(.hidden) { display:flex; flex:1; flex-direction:column; min-height:0; overflow:hidden; }
-.scratchpad-dialog.scratchpad-fullscreen .scratchpad-scroll.scratch-text-layout #scratch-text-workspace { flex:1; height:auto; min-height:140px; }
-.scratchpad-dialog.scratchpad-fullscreen .scratchpad-scroll.scratch-text-layout #scratch-text-board { min-height:100%; }
-.scratchpad-dialog.scratchpad-fullscreen .scratchpad-scroll.scratch-draw-layout { display:flex; flex-direction:column; overflow:hidden; }
-.scratchpad-dialog.scratchpad-fullscreen .scratchpad-scroll.scratch-draw-layout #scratch-draw-panel:not(.hidden) { display:flex; flex:1; flex-direction:column; min-height:0; }
-.scratchpad-dialog.scratchpad-fullscreen .scratchpad-scroll.scratch-draw-layout #scratch-draw-panel > .scratchpad-toolbar:first-child { order:3; }
-.scratchpad-dialog.scratchpad-fullscreen .scratchpad-scroll.scratch-draw-layout #scratch-draw-panel > .scratchpad-toolbar:nth-child(2) { order:4; }
-.scratchpad-dialog.scratchpad-fullscreen .scratchpad-scroll.scratch-draw-layout #scratch-draw-panel > p { order:2; }
-.scratchpad-dialog.scratchpad-fullscreen .scratchpad-scroll.scratch-draw-layout #scratchpad-viewport { order:1; flex:1; height:auto; min-height:140px; }
+#scratchpad-text, .scratchpad-textarea { display:block; box-sizing:border-box; width:100%; min-width:0; min-height:22dvh; max-height:48dvh; resize:both; border:1px solid #cbd5e1; border-radius:.8rem; padding:.9rem; color:#0f172a; background:#fff; font:1rem/1.8 ui-monospace,SFMono-Regular,Consolas,monospace; tab-size:4; }
+#scratchpad-text { overflow:auto; white-space:pre; background-image:linear-gradient(transparent calc(100% - 1px), #e2e8f0 1px); background-size:100% 1.8em; background-origin:content-box; }
 .tip-plain-formula { display:flex; flex-wrap:wrap; align-items:baseline; gap:.25rem .4rem; box-sizing:border-box; min-width:0; width:100%; max-width:100%; margin:.55rem 0; padding:.7rem .8rem; border:1px solid #dbeafe; border-radius:.7rem; background:#eff6ff; white-space:normal; overflow-wrap:anywhere; word-break:normal; line-height:1.65; }
 .tip-plain-formula > span { min-width:0; max-width:100%; overflow-wrap:anywhere; }
 .tip-plain-formula .formula-term { display:inline; }
@@ -1493,11 +1482,7 @@ let scratchPanAnchor = null;
 let scratchPinchAnchor = null;
 let scratchRenderQueued = false;
 let scratchpadCreated = false;
-let scratchTextZoom = 1;
-let scratchTextBlockCounter = 0;
-let scratchTextActive = null;
-let scratchTextBoardWidth = 0;
-let scratchTextBoardHeight = 900;
+let scratchTextFontSize = 16;
 
 function ensureScratchpad() {
   if (scratchpadCreated && document.getElementById('scratchpad-overlay')) return;
@@ -1506,7 +1491,13 @@ function ensureScratchpad() {
     <div class="scratchpad-dialog">
       <header class="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-3">
         <div class="min-w-0"><h2 id="scratchpad-title" class="text-lg font-extrabold text-slate-900">Черновик</h2><p class="text-xs text-slate-500">Записи сохраняются, пока открыта эта страница</p></div>
-        <button onclick="closeScratchpad()" class="scratchpad-tool shrink-0" aria-label="Закрыть черновик">Закрыть ✕</button>
+        <div class="flex items-center gap-2 shrink-0">
+          <button id="scratch-fullscreen-button" onclick="toggleScratchFullscreen()" class="scratchpad-tool" aria-label="Развернуть черновик на весь экран" title="Полный экран">
+            <svg id="scratch-expand-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8 3H3v5M3 3l5 5M16 3h5v5m0-5-5 5M3 16v5h5m-5 0 5-5m11 0v5h-5m5 0-5-5"/></svg>
+            <svg id="scratch-collapse-icon" class="hidden" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8 3v5H3m0-5 5 5M16 3v5h5m0-5-5 5M3 16h5v5m-5 0 5-5m16 0h-5v5m5 0-5-5"/></svg>
+          </button>
+          <button onclick="closeScratchpad()" class="scratchpad-tool" aria-label="Закрыть черновик">✕</button>
+        </div>
       </header>
       <div class="px-4 pt-3">
         <div class="grid grid-cols-2 gap-2 rounded-xl bg-slate-100 p-1">
@@ -1551,33 +1542,30 @@ function ensureScratchpad() {
           </div>
         </section>
         <section id="scratch-text-panel" class="hidden space-y-3">
-          <p class="text-sm leading-6 text-slate-600">Нажми в любом свободном месте листа — там появится отдельное поле для записи. Поля можно размещать рядом и независимо менять их ширину и высоту.</p>
-          <div class="scratch-text-tools">
-            <button onclick="createScratchTextBlock()" class="scratchpad-tool">＋ Текстовый блок</button>
-            <button onclick="changeScratchTextZoom(-0.1)" class="scratchpad-tool" aria-label="Уменьшить текст">A−</button>
-            <span id="scratch-text-zoom-label" class="min-w-[3.2rem] text-center text-xs font-bold text-slate-600">100%</span>
-            <button onclick="changeScratchTextZoom(0.1)" class="scratchpad-tool" aria-label="Увеличить текст">A+</button>
+          <p class="text-sm leading-6 text-slate-600">Нажимай в нужное место листа и начинай писать. В пустой области курсор будет поставлен в выбранную строку и колонку; можно записывать несколько вычислений рядом.</p>
+          <div class="flex items-center flex-wrap gap-2">
+            <button onclick="setScratchTextFontSize(-1)" class="scratchpad-tool" aria-label="Уменьшить размер букв">A−</button>
+            <span id="scratch-text-size-label" class="text-xs font-bold text-slate-600 min-w-[3.2rem] text-center">16 px</span>
+            <button onclick="setScratchTextFontSize(1)" class="scratchpad-tool" aria-label="Увеличить размер букв">A+</button>
             <button onclick="clearScratchText()" class="scratchpad-tool">Очистить текст</button>
           </div>
-          <div id="scratch-text-workspace" class="scratch-text-workspace" aria-label="Лист текстового черновика">
-            <div id="scratch-text-board" class="scratch-text-board"><p id="scratch-text-hint" class="scratch-text-hint">Нажми в любом месте листа, чтобы начать писать</p></div>
-          </div>
-          <div class="space-y-2"><p class="text-xs font-bold uppercase tracking-wide text-slate-500">Быстрые математические символы</p>
-            <div class="scratch-text-symbols">
+          <textarea id="scratchpad-text" wrap="off" spellcheck="false" autocapitalize="off" placeholder="Нажми сюда или в любую пустую область и записывай решение…" class="scratchpad-textarea"></textarea>
+          <div class="space-y-2"><p class="text-xs font-bold uppercase tracking-wide text-slate-500">Математические символы</p>
+            <div class="scratchpad-symbols">
               <button class="scratchpad-symbol" onclick="insertScratchToken('π')">π</button>
               <button class="scratchpad-symbol" onclick="insertScratchToken('√()')">√()</button>
               <button class="scratchpad-symbol" onclick="insertScratchToken('^()')">^( )</button>
               <button class="scratchpad-symbol" onclick="insertScratchToken('²')">²</button>
               <button class="scratchpad-symbol" onclick="insertScratchToken('³')">³</button>
               <button class="scratchpad-symbol" onclick="insertScratchToken('ⁿ')">ⁿ</button>
-              <button class="scratchpad-symbol" onclick="insertScratchToken('sin(')">sin</button>
-              <button class="scratchpad-symbol" onclick="insertScratchToken('cos(')">cos</button>
-              <button class="scratchpad-symbol" onclick="insertScratchToken('tg(')">tg</button>
-              <button class="scratchpad-symbol" onclick="insertScratchToken('ctg(')">ctg</button>
-              <button class="scratchpad-symbol" onclick="insertScratchToken('arcsin(')">asin</button>
-              <button class="scratchpad-symbol" onclick="insertScratchToken('arccos(')">acos</button>
-              <button class="scratchpad-symbol" onclick="insertScratchToken('arctg(')">atg</button>
-              <button class="scratchpad-symbol" onclick="insertScratchToken('arcctg(')">actg</button>
+              <button class="scratchpad-symbol" onclick="insertScratchToken('sin(')">sin(</button>
+              <button class="scratchpad-symbol" onclick="insertScratchToken('cos(')">cos(</button>
+              <button class="scratchpad-symbol" onclick="insertScratchToken('tg(')">tg(</button>
+              <button class="scratchpad-symbol" onclick="insertScratchToken('ctg(')">ctg(</button>
+              <button class="scratchpad-symbol" onclick="insertScratchToken('arcsin(')">arcsin(</button>
+              <button class="scratchpad-symbol" onclick="insertScratchToken('arccos(')">arccos(</button>
+              <button class="scratchpad-symbol" onclick="insertScratchToken('arctg(')">arctg(</button>
+              <button class="scratchpad-symbol" onclick="insertScratchToken('arcctg(')">arcctg(</button>
               <button class="scratchpad-symbol" onclick="insertScratchToken('≠')">≠</button>
               <button class="scratchpad-symbol" onclick="insertScratchToken('≤')">≤</button>
               <button class="scratchpad-symbol" onclick="insertScratchToken('≥')">≥</button>
@@ -1585,12 +1573,8 @@ function ensureScratchpad() {
               <button class="scratchpad-symbol" onclick="insertScratchToken('∞')">∞</button>
             </div>
           </div>
-          <p class="text-xs text-slate-500">Каждый текстовый блок можно растянуть за угол. Увеличение A+/A− меняет размер букв во всех блоках.</p>
+          <p class="text-xs text-slate-500">Черновик свободный: записи не проверяются и не влияют на баллы.</p>
         </section>
-          <button id="scratch-fullscreen-toggle" onclick="toggleScratchFullscreen()" class="scratch-fullscreen-button" aria-label="Развернуть черновик на весь экран">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8 3H3v5M3 3l7 7M16 3h5v5m0-5-7 7M3 16v5h5m-5 0 7-7m11 7h-5m5 0v-5m0 5-7-7"/></svg>
-            <span>Развернуть на весь экран</span>
-          </button>
       </div>
       <footer class="flex items-center justify-between gap-3 border-t border-slate-200 px-4 py-3">
         <span class="text-xs text-slate-500">Черновик не отправляется в ответы теста</span>
@@ -1602,13 +1586,9 @@ function ensureScratchpad() {
   scratchpadCreated = true;
   const overlay = document.getElementById('scratchpad-overlay');
   const viewport = document.getElementById('scratchpad-viewport');
+  const textEditor = document.getElementById('scratchpad-text');
   overlay.addEventListener('click', event => { if (event.target === overlay) closeScratchpad(); });
-  const textBoard = document.getElementById('scratch-text-board');
-  if (textBoard) textBoard.addEventListener('click', event => {
-    if (event.target.closest('textarea, button')) return;
-    const rect = textBoard.getBoundingClientRect();
-    createScratchTextBlock(event.clientX - rect.left, event.clientY - rect.top, true);
-  });
+  textEditor.addEventListener('click', placeScratchCaretAtBlankPoint);
   viewport.addEventListener('pointerdown', handleScratchPointerDown);
   viewport.addEventListener('pointermove', handleScratchPointerMove);
   viewport.addEventListener('pointerup', handleScratchPointerUp);
@@ -1624,6 +1604,10 @@ function openScratchpad() {
   ensureScratchpad();
   document.getElementById('scratchpad-overlay').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
+  const textEditor = document.getElementById('scratchpad-text');
+  if (textEditor) textEditor.style.fontSize = scratchTextFontSize + 'px';
+  const textSizeLabel = document.getElementById('scratch-text-size-label');
+  if (textSizeLabel) textSizeLabel.textContent = scratchTextFontSize + ' px';
   requestAnimationFrame(() => {
     const viewport = document.getElementById('scratchpad-viewport');
     if (!viewport) return;
@@ -1651,10 +1635,14 @@ function clearScratchpadData() {
   scratchPanAnchor = null;
   scratchPinchAnchor = null;
   scratchZoom = 1;
-  resetScratchTextBlocks();
-  scratchTextZoom = 1;
-  const textZoomLabel = document.getElementById('scratch-text-zoom-label');
-  if (textZoomLabel) textZoomLabel.textContent = '100%';
+  const textarea = document.getElementById('scratchpad-text');
+  if (textarea) {
+    textarea.value = '';
+    scratchTextFontSize = 16;
+    textarea.style.fontSize = scratchTextFontSize + 'px';
+  }
+  const textSizeLabel = document.getElementById('scratch-text-size-label');
+  if (textSizeLabel) textSizeLabel.textContent = scratchTextFontSize + ' px';
   const viewport = document.getElementById('scratchpad-viewport');
   scratchBaseWidth = Math.max(280, Math.floor((viewport && viewport.clientWidth) || (window.innerWidth - 48)));
   scratchBaseHeight = Math.max(1200, Math.floor(window.innerHeight * 1.2));
@@ -1675,14 +1663,6 @@ function setScratchpadTab(tab) {
   textPanel.classList.toggle('hidden', scratchpadTab !== 'text');
   drawTab.classList.toggle('active', scratchpadTab === 'draw');
   textTab.classList.toggle('active', scratchpadTab === 'text');
-  const overlay = document.getElementById('scratchpad-overlay');
-  const dialog = overlay && overlay.querySelector('.scratchpad-dialog');
-  const scroll = overlay && overlay.querySelector('.scratchpad-scroll');
-  const fullscreen = !!(dialog && dialog.classList.contains('scratchpad-fullscreen'));
-  if (scroll) {
-    scroll.classList.toggle('scratch-text-layout', fullscreen && scratchpadTab === 'text');
-    scroll.classList.toggle('scratch-draw-layout', fullscreen && scratchpadTab === 'draw');
-  }
   if (scratchpadTab === 'draw') requestAnimationFrame(() => {
     const viewport = document.getElementById('scratchpad-viewport');
     if (viewport && scratchStrokes.length === 0) scratchBaseWidth = Math.max(280, Math.floor(viewport.clientWidth || window.innerWidth - 32));
@@ -1727,128 +1707,85 @@ function scratchClear() {
   if (!scratchStrokes.length) return;
   if (confirm('Очистить весь рукописный черновик?')) { scratchStrokes = []; scratchRedo = []; renderScratchCanvas(); }
 }
-function expandScratchTextBoardToFit(textarea) {
-  const board = document.getElementById('scratch-text-board');
-  const workspace = document.getElementById('scratch-text-workspace');
-  if (!board || !workspace || !textarea) return;
-  const x = Math.max(0, parseFloat(textarea.style.left) || 0);
-  const y = Math.max(0, parseFloat(textarea.style.top) || 0);
-  scratchTextBoardWidth = Math.max(scratchTextBoardWidth, workspace.clientWidth, x + textarea.offsetWidth + 24);
-  scratchTextBoardHeight = Math.max(scratchTextBoardHeight, 900, y + textarea.offsetHeight + 24);
-  board.style.width = scratchTextBoardWidth + 'px';
-  board.style.height = scratchTextBoardHeight + 'px';
-}
-
-function createScratchTextBlock(x, y, focus = true) {
-  const board = document.getElementById('scratch-text-board');
-  const workspace = document.getElementById('scratch-text-workspace');
-  if (!board || !workspace) return null;
-  const hint = document.getElementById('scratch-text-hint');
-  if (hint) hint.remove();
-  scratchTextBlockCounter += 1;
-  if (!Number.isFinite(x) || !Number.isFinite(y)) {
-    const notes = [...board.querySelectorAll('textarea.scratch-text-note')];
-    if (notes.length) {
-      const last = notes[notes.length - 1];
-      x = (parseFloat(last.style.left) || 0) + last.offsetWidth + 16;
-      y = parseFloat(last.style.top) || 12;
-    } else {
-      x = workspace.scrollLeft + 12;
-      y = workspace.scrollTop + 12;
-    }
-  }
-  const boardWidth = Math.max(board.clientWidth, workspace.clientWidth, scratchTextBoardWidth);
-  const width = Math.max(120, Math.min(280, boardWidth - 16));
-  x = Math.max(4, Number(x) || 0);
-  y = Math.max(4, Number(y) || 0);
-  const textarea = document.createElement('textarea');
-  textarea.className = 'scratch-text-note';
-  textarea.setAttribute('aria-label', 'Текстовый блок черновика');
-  textarea.placeholder = 'Пиши здесь…';
-  textarea.spellcheck = false;
-  textarea.style.left = Math.round(x) + 'px';
-  textarea.style.top = Math.round(y) + 'px';
-  textarea.style.width = width + 'px';
-  textarea.style.height = '150px';
-  textarea.style.fontSize = (16 * scratchTextZoom) + 'px';
-  textarea.dataset.scratchNote = String(scratchTextBlockCounter);
-  textarea.addEventListener('focus', () => { scratchTextActive = textarea; });
-  textarea.addEventListener('pointerdown', () => { scratchTextActive = textarea; });
-  board.appendChild(textarea);
-  scratchTextActive = textarea;
-  expandScratchTextBoardToFit(textarea);
-  if (typeof ResizeObserver !== 'undefined') {
-    const observer = new ResizeObserver(() => expandScratchTextBoardToFit(textarea));
-    observer.observe(textarea);
-  }
-  if (focus) textarea.focus();
-  return textarea;
-}
-
-function resetScratchTextBlocks() {
-  const board = document.getElementById('scratch-text-board');
-  if (!board) { scratchTextActive = null; return; }
-  board.innerHTML = '<p id="scratch-text-hint" class="scratch-text-hint">Нажми в любом месте листа, чтобы начать писать</p>';
-  board.style.width = '';
-  board.style.height = '';
-  scratchTextBoardWidth = 0;
-  scratchTextBoardHeight = 900;
-  scratchTextActive = null;
-  scratchTextBlockCounter = 0;
-}
-
-function clearScratchText() {
-  const board = document.getElementById('scratch-text-board');
-  if (!board) return;
-  const notes = board.querySelectorAll('textarea.scratch-text-note');
-  if (!notes.length) return;
-  if (confirm('Очистить все текстовые блоки черновика?')) resetScratchTextBlocks();
-}
-
-function changeScratchTextZoom(delta) {
-  scratchTextZoom = Math.max(.6, Math.min(2, Math.round((scratchTextZoom + delta) * 10) / 10));
-  document.querySelectorAll('#scratch-text-board .scratch-text-note').forEach(note => {
-    note.style.fontSize = (16 * scratchTextZoom) + 'px';
-  });
-  const label = document.getElementById('scratch-text-zoom-label');
-  if (label) label.textContent = Math.round(scratchTextZoom * 100) + '%';
-}
-
 function toggleScratchFullscreen() {
   const overlay = document.getElementById('scratchpad-overlay');
   const dialog = overlay && overlay.querySelector('.scratchpad-dialog');
-  const button = document.getElementById('scratch-fullscreen-toggle');
-  const span = button && button.querySelector('span');
-  if (!overlay || !dialog) return;
+  const expand = document.getElementById('scratch-expand-icon');
+  const collapse = document.getElementById('scratch-collapse-icon');
+  const button = document.getElementById('scratch-fullscreen-button');
+  if (!overlay || !dialog || !button) return;
   const fullscreen = !dialog.classList.contains('scratchpad-fullscreen');
   dialog.classList.toggle('scratchpad-fullscreen', fullscreen);
   overlay.classList.toggle('scratchpad-overlay-fullscreen', fullscreen);
-  if (fullscreen) {
-    button && button.setAttribute('aria-label', 'Свернуть черновик');
-    if (span) span.textContent = 'Свернуть до обычного окна';
-  } else {
-    button && button.setAttribute('aria-label', 'Развернуть черновик на весь экран');
-    if (span) span.textContent = 'Развернуть на весь экран';
-  }
-  const scroll = overlay.querySelector('.scratchpad-scroll');
-  if (scroll) {
-    scroll.classList.toggle('scratch-text-layout', fullscreen && scratchpadTab === 'text');
-    scroll.classList.toggle('scratch-draw-layout', fullscreen && scratchpadTab === 'draw');
-  }
+  expand && expand.classList.toggle('hidden', fullscreen);
+  collapse && collapse.classList.toggle('hidden', !fullscreen);
+  button.setAttribute('aria-label', fullscreen ? 'Свернуть черновик' : 'Развернуть черновик на весь экран');
+  button.setAttribute('title', fullscreen ? 'Свернуть' : 'Полный экран');
   requestAnimationFrame(() => {
     const viewport = document.getElementById('scratchpad-viewport');
-    if (viewport) renderScratchCanvas();
+    if (viewport) {
+      if (scratchStrokes.length === 0) scratchBaseWidth = Math.max(280, Math.floor(viewport.clientWidth || window.innerWidth - 32));
+      renderScratchCanvas();
+    }
   });
 }
 
+function setScratchTextFontSize(delta) {
+  scratchTextFontSize = Math.max(12, Math.min(28, scratchTextFontSize + (Number(delta) || 0)));
+  const textarea = document.getElementById('scratchpad-text');
+  const label = document.getElementById('scratch-text-size-label');
+  if (textarea) textarea.style.fontSize = scratchTextFontSize + 'px';
+  if (label) label.textContent = scratchTextFontSize + ' px';
+}
+
+function clearScratchText() {
+  const textarea = document.getElementById('scratchpad-text');
+  if (!textarea || !textarea.value) return;
+  if (confirm('Очистить текстовый черновик?')) {
+    textarea.value = '';
+    textarea.focus();
+  }
+}
+
+function placeScratchCaretAtBlankPoint(event) {
+  const textarea = event.currentTarget;
+  if (!textarea || event.button > 0) return;
+  const rect = textarea.getBoundingClientRect();
+  const style = window.getComputedStyle(textarea);
+  const fontSize = parseFloat(style.fontSize) || scratchTextFontSize || 16;
+  const lineHeight = parseFloat(style.lineHeight) || fontSize * 1.8;
+  const paddingLeft = parseFloat(style.paddingLeft) || 0;
+  const paddingTop = parseFloat(style.paddingTop) || 0;
+  const probe = document.createElement('canvas');
+  const context = probe.getContext('2d');
+  if (context) context.font = style.font;
+  const charWidth = (context && context.measureText('M').width) || fontSize * .6;
+  const x = Math.max(0, event.clientX - rect.left - paddingLeft + textarea.scrollLeft);
+  const y = Math.max(0, event.clientY - rect.top - paddingTop + textarea.scrollTop);
+  const row = Math.max(0, Math.floor(y / lineHeight));
+  const column = Math.max(0, Math.floor(x / charWidth));
+  const lines = textarea.value.split('\n');
+  const rowMissing = row >= lines.length;
+  const line = rowMissing ? '' : lines[row];
+  if (rowMissing || column > line.length) {
+    while (lines.length <= row) lines.push('');
+    if (lines[row].length < column) lines[row] += ' '.repeat(column - lines[row].length);
+    textarea.value = lines.join('\n');
+    let caret = 0;
+    for (let i = 0; i < row; i++) caret += lines[i].length + 1;
+    caret += Math.min(column, lines[row].length);
+    textarea.setSelectionRange(caret, caret);
+  }
+}
+
 function insertScratchToken(token) {
-  let textarea = scratchTextActive;
-  if (!textarea || !textarea.isConnected) textarea = createScratchTextBlock();
+  const textarea = document.getElementById('scratchpad-text');
   if (!textarea) return;
   const start = textarea.selectionStart ?? textarea.value.length;
   const end = textarea.selectionEnd ?? start;
   textarea.setRangeText(token, start, end, 'end');
   textarea.focus();
+  // For paired templates, place the caret inside the pair rather than after the closing bracket.
   if (token === '√()' || token === '^()') {
     const caret = start + token.length - 1;
     textarea.setSelectionRange(caret, caret);
