@@ -1496,6 +1496,8 @@ let scratchpadCreated = false;
 let scratchTextZoom = 1;
 let scratchTextBlockCounter = 0;
 let scratchTextActive = null;
+let scratchTextBoardWidth = 0;
+let scratchTextBoardHeight = 900;
 
 function ensureScratchpad() {
   if (scratchpadCreated && document.getElementById('scratchpad-overlay')) return;
@@ -1725,6 +1727,18 @@ function scratchClear() {
   if (!scratchStrokes.length) return;
   if (confirm('Очистить весь рукописный черновик?')) { scratchStrokes = []; scratchRedo = []; renderScratchCanvas(); }
 }
+function expandScratchTextBoardToFit(textarea) {
+  const board = document.getElementById('scratch-text-board');
+  const workspace = document.getElementById('scratch-text-workspace');
+  if (!board || !workspace || !textarea) return;
+  const x = Math.max(0, parseFloat(textarea.style.left) || 0);
+  const y = Math.max(0, parseFloat(textarea.style.top) || 0);
+  scratchTextBoardWidth = Math.max(scratchTextBoardWidth, workspace.clientWidth, x + textarea.offsetWidth + 24);
+  scratchTextBoardHeight = Math.max(scratchTextBoardHeight, 900, y + textarea.offsetHeight + 24);
+  board.style.width = scratchTextBoardWidth + 'px';
+  board.style.height = scratchTextBoardHeight + 'px';
+}
+
 function createScratchTextBlock(x, y, focus = true) {
   const board = document.getElementById('scratch-text-board');
   const workspace = document.getElementById('scratch-text-workspace');
@@ -1733,12 +1747,19 @@ function createScratchTextBlock(x, y, focus = true) {
   if (hint) hint.remove();
   scratchTextBlockCounter += 1;
   if (!Number.isFinite(x) || !Number.isFinite(y)) {
-    const offset = ((scratchTextBlockCounter - 1) % 5) * 22;
-    x = workspace.scrollLeft + 12 + offset;
-    y = workspace.scrollTop + 12 + offset;
+    const notes = [...board.querySelectorAll('textarea.scratch-text-note')];
+    if (notes.length) {
+      const last = notes[notes.length - 1];
+      x = (parseFloat(last.style.left) || 0) + last.offsetWidth + 16;
+      y = parseFloat(last.style.top) || 12;
+    } else {
+      x = workspace.scrollLeft + 12;
+      y = workspace.scrollTop + 12;
+    }
   }
-  const width = Math.max(120, Math.min(280, board.clientWidth - 16));
-  x = Math.max(4, Math.min(Number(x) || 0, Math.max(4, board.clientWidth - 80)));
+  const boardWidth = Math.max(board.clientWidth, workspace.clientWidth, scratchTextBoardWidth);
+  const width = Math.max(120, Math.min(280, boardWidth - 16));
+  x = Math.max(4, Number(x) || 0);
   y = Math.max(4, Number(y) || 0);
   const textarea = document.createElement('textarea');
   textarea.className = 'scratch-text-note';
@@ -1755,6 +1776,11 @@ function createScratchTextBlock(x, y, focus = true) {
   textarea.addEventListener('pointerdown', () => { scratchTextActive = textarea; });
   board.appendChild(textarea);
   scratchTextActive = textarea;
+  expandScratchTextBoardToFit(textarea);
+  if (typeof ResizeObserver !== 'undefined') {
+    const observer = new ResizeObserver(() => expandScratchTextBoardToFit(textarea));
+    observer.observe(textarea);
+  }
   if (focus) textarea.focus();
   return textarea;
 }
@@ -1763,6 +1789,10 @@ function resetScratchTextBlocks() {
   const board = document.getElementById('scratch-text-board');
   if (!board) { scratchTextActive = null; return; }
   board.innerHTML = '<p id="scratch-text-hint" class="scratch-text-hint">Нажми в любом месте листа, чтобы начать писать</p>';
+  board.style.width = '';
+  board.style.height = '';
+  scratchTextBoardWidth = 0;
+  scratchTextBoardHeight = 900;
   scratchTextActive = null;
   scratchTextBlockCounter = 0;
 }
@@ -1796,7 +1826,6 @@ function toggleScratchFullscreen() {
   if (fullscreen) {
     button && button.setAttribute('aria-label', 'Свернуть черновик');
     if (span) span.textContent = 'Свернуть до обычного окна';
-    button && (button.innerHTML = button.innerHTML.replace('Развернуть на весь экран', 'Свернуть до обычного окна'));
   } else {
     button && button.setAttribute('aria-label', 'Развернуть черновик на весь экран');
     if (span) span.textContent = 'Развернуть на весь экран';
