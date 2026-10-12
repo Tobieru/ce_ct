@@ -1682,6 +1682,11 @@ function closeScratchpad() {
   const expand = document.getElementById('scratch-expand-icon');
   const collapse = document.getElementById('scratch-collapse-icon');
   const button = document.getElementById('scratch-fullscreen-button');
+  if (wasFullscreen && overlay && dialog) {
+    dialog.classList.remove('scratchpad-fullscreen');
+    overlay.classList.remove('scratchpad-overlay-fullscreen');
+    syncScratchpadFullscreenLayout(false);
+  }
   if (overlay) {
     overlay.classList.add('hidden');
     overlay.classList.remove('scratchpad-overlay-fullscreen');
