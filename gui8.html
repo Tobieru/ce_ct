@@ -1744,6 +1744,8 @@ function setScratchpadTab(tab) {
   textPanel.classList.toggle('hidden', scratchpadTab !== 'text');
   drawTab.classList.toggle('active', scratchpadTab === 'draw');
   textTab.classList.toggle('active', scratchpadTab === 'text');
+  const fullscreenDialog = document.querySelector('#scratchpad-overlay .scratchpad-dialog.scratchpad-fullscreen');
+  if (fullscreenDialog) syncScratchpadFullscreenLayout(true);
   if (scratchpadTab === 'draw') requestAnimationFrame(() => {
     const viewport = document.getElementById('scratchpad-viewport');
     if (viewport && scratchStrokes.length === 0) scratchBaseWidth = Math.max(280, Math.floor(viewport.clientWidth || window.innerWidth - 32));
@@ -1844,6 +1846,12 @@ function syncScratchpadFullscreenLayout(fullscreen) {
 
   // Explicit inline layout avoids depending on conflicting mobile/Tailwind styles.
   if (fullscreen) {
+    [drawPanel, textPanel].forEach(panel => {
+      if (panel) ['display','flex','flex-direction','min-height','overflow'].forEach(k => panel.style.removeProperty(k));
+    });
+    if (textWorkspace) ['display','flex','flex-direction','width','height','min-height','max-height','overflow'].forEach(k => textWorkspace.style.removeProperty(k));
+    if (textEditor) ['display','flex','width','height','min-height','max-height','resize'].forEach(k => textEditor.style.removeProperty(k));
+    if (viewport) ['flex','height','min-height','max-height','overflow'].forEach(k => viewport.style.removeProperty(k));
     overlay.style.setProperty('position', 'fixed');
     overlay.style.setProperty('inset', '0');
     overlay.style.setProperty('z-index', '99999');
