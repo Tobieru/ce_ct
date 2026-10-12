@@ -98,6 +98,28 @@ mjx-container { -webkit-user-select: none; user-select: none; }
 .option-btn.is-missed .option-label { background: #fde68a !important; color: #92400e !important; }
 .top-action { padding: .55rem .9rem; white-space: nowrap; }
 @media (max-width: 390px) { .top-action { padding: .5rem .65rem; font-size: .72rem; } }
+.scratch-text-workspace { box-sizing:border-box; width:100%; height:42dvh; min-height:230px; max-height:none; overflow:auto; overscroll-behavior:contain; border:1px solid #cbd5e1; border-radius:.85rem; background:#fff; background-image:linear-gradient(#e2e8f0 1px,transparent 1px); background-size:100% 1.8em; }
+#scratchpad-text { display:block; box-sizing:border-box; width:100%; height:520px; min-width:240px; min-height:220px; max-width:none; max-height:none; margin:0; resize:none; border:0; border-radius:0; padding:.75rem; color:#0f172a; background:transparent; background-image:none; font:16px/1.8 ui-monospace,SFMono-Regular,Consolas,monospace; }
+#scratchpad-text:focus { outline:none; }
+.scratchpad-dialog.scratchpad-fullscreen #scratch-text-panel:not(.hidden) { flex:1; min-height:0; display:flex; flex-direction:column; }
+.scratchpad-dialog.scratchpad-fullscreen #scratch-text-workspace { flex:1; min-height:0; height:auto; max-height:none; }
+.scratchpad-dialog.scratchpad-fullscreen #scratchpad-text { min-height:100%; }
+.scratchpad-dialog.scratchpad-fullscreen #scratch-draw-panel:not(.hidden) { flex:1; min-height:0; display:flex; flex-direction:column; }
+.scratchpad-dialog.scratchpad-fullscreen #scratchpad-viewport { flex:1; min-height:0; height:auto; max-height:none; }
+#scratchpad-overlay.scratchpad-overlay-fullscreen { position:fixed; inset:0; z-index:99999; width:100vw; height:100vh; height:100dvh; margin:0; padding:0; align-items:stretch; justify-content:stretch; background:#fff; }
+#scratchpad-overlay.scratchpad-overlay-fullscreen .scratchpad-dialog { box-sizing:border-box; display:flex; flex-direction:column; width:100%; height:100%; min-height:0; max-height:none; margin:0; border:0; border-radius:0; overflow:hidden; box-shadow:none; }
+.answer-feedback { box-sizing:border-box; width:100%; margin-top:.2rem; padding:1rem; border:0; border-radius:.9rem; font-size:.98rem; line-height:1.75; }
+.answer-feedback-correct { background:#dcfce7; color:#14532d; }
+.answer-feedback-wrong { background:#ffe4e6; color:#881337; }
+.answer-feedback-verdict { margin:0 0 .35rem; font-weight:800; font-size:1rem; }
+.answer-solution-copy { min-width:0; max-width:100%; font-weight:400; line-height:1.75; overflow-wrap:normal; word-break:normal; }
+.answer-solution-copy p { margin:.25rem 0; }
+.answer-solution-copy div + div { margin-top:.25rem; }
+.answer-solution-copy mjx-container { max-width:100%; }
+.option-explanation { display:block; width:100%; margin-top:.65rem; padding:0; border:0; font-weight:400; line-height:1.75; white-space:normal; overflow-wrap:normal; word-break:normal; }
+.option-explanation .answer-feedback-verdict { margin-bottom:.3rem; }
+.option-explanation .answer-correct-answer { margin:.15rem 0 .3rem; font-weight:650; }
+#scratch-text-workspace { touch-action:pan-x pan-y; }
 </style>
 </head>
 <body class="bg-slate-100 text-slate-900 min-h-screen flex flex-col font-sans">
@@ -435,6 +457,17 @@ function getDetailedSolutionHtml(q) {
       <div class="text-sm leading-7">${q.solution || 'Подставь данные из условия в правило выше и проверь ответ.'}</div>
     </section>
   </div>`;
+}
+
+function getAnswerSolutionHtml(q) {
+  let html = String(getDetailedSolutionHtml(q) || (q && q.solution) || '');
+  html = html
+    .replace(/<p[^>]*>\s*Ключевое правило\s*<\/p>/gi, '')
+    .replace(/<p[^>]*>\s*Применяем к заданию\s*<\/p>/gi, '')
+    .replace(/\sclass="[^"]*"/g, '')
+    .replace(/<section\b/gi, '<div')
+    .replace(/<\/section>/gi, '</div>');
+  return html;
 }
 
 function safeParseArray(raw) {
@@ -1255,11 +1288,12 @@ function afterAnswer(isCorrect, points, verdictText, verdictOk) {
   const solutionBlock = document.getElementById('solution-block');
   const nextButton = document.getElementById('next-btn');
   if (verdict) {
-    verdict.textContent = verdictText;
-    verdict.classList.remove('text-emerald-700', 'text-rose-700');
-    verdict.classList.add(verdictOk ? 'text-emerald-700' : 'text-rose-700');
+    verdict.textContent = verdictOk ? 'Корректно!' : 'Неверно!';
+    verdict.classList.add('answer-feedback-verdict');
   }
   if (solutionBlock) {
+    solutionBlock.classList.remove('answer-feedback-correct', 'answer-feedback-wrong');
+    solutionBlock.classList.add(verdictOk ? 'answer-feedback-correct' : 'answer-feedback-wrong');
     if (q.type === 'single') solutionBlock.classList.add('hidden');
     else solutionBlock.classList.remove('hidden');
   }
@@ -1280,17 +1314,21 @@ function answerQuestion(idx) {
     if (label) label.classList.remove('bg-slate-100', 'text-slate-500');
   });
 
-  const correctButton = document.querySelector(`.option-btn[data-idx="${q.correctIndex}"]`);
-  const optionText = correctButton && correctButton.querySelector('.option-text');
+  const chosenButton = document.querySelector(`.option-btn[data-idx="${idx}"]`);
+  const optionText = chosenButton && chosenButton.querySelector('.option-text');
   if (optionText && !optionText.querySelector('.option-explanation')) {
-    optionText.insertAdjacentHTML('beforeend', `<div class="option-explanation mt-3 pt-3 border-t border-emerald-900/15"><p class="mb-1 text-[11px] font-bold uppercase tracking-wider opacity-80">Подробное решение</p><div>${getDetailedSolutionHtml(q)}</div></div>`);
+    const correctAnswer = !ok
+      ? `<p class="answer-correct-answer">Правильный ответ: ${formatQuestionText(q.options[q.correctIndex])}</p>`
+      : '';
+    optionText.insertAdjacentHTML('beforeend',
+      `<div class="option-explanation"><p class="answer-feedback-verdict">${ok ? 'Корректно!' : 'Неверно!'}</p>${correctAnswer}<div class="answer-solution-copy">${getAnswerSolutionHtml(q)}</div></div>`);
     if (window.MathJax && window.MathJax.typesetPromise) {
       const explanation = optionText.querySelector('.option-explanation');
       if (explanation) window.MathJax.typesetPromise([explanation]).catch(() => {});
     }
   }
 
-  afterAnswer(ok, ok ? 1 : 0, ok ? 'Верно! Задание засчитано: 1 п.б.' : 'Неверно. Верный ответ выделен зелёным.', ok);
+  afterAnswer(ok, ok ? 1 : 0, ok ? 'Корректно!' : 'Неверно!', ok);
 }
 
 function toggleMulti(idx) {
@@ -1483,6 +1521,10 @@ let scratchPinchAnchor = null;
 let scratchRenderQueued = false;
 let scratchpadCreated = false;
 let scratchTextFontSize = 16;
+let scratchTextWidth = 360;
+let scratchTextHeight = 520;
+let scratchTextWidthCustom = false;
+let scratchTextHeightCustom = false;
 
 function ensureScratchpad() {
   if (scratchpadCreated && document.getElementById('scratchpad-overlay')) return;
@@ -1548,8 +1590,16 @@ function ensureScratchpad() {
             <span id="scratch-text-size-label" class="text-xs font-bold text-slate-600 min-w-[3.2rem] text-center">16 px</span>
             <button onclick="setScratchTextFontSize(1)" class="scratchpad-tool" aria-label="Увеличить размер букв">A+</button>
             <button onclick="clearScratchText()" class="scratchpad-tool">Очистить текст</button>
+            <label class="flex items-center gap-1 text-xs font-semibold text-slate-600">Ширина, px
+              <input id="scratch-text-width" type="number" inputmode="numeric" min="240" max="5000" step="20" value="360" onchange="setScratchTextDimension('width', this.value)" class="w-[5.5rem] rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm">
+            </label>
+            <label class="flex items-center gap-1 text-xs font-semibold text-slate-600">Высота, px
+              <input id="scratch-text-height" type="number" inputmode="numeric" min="220" max="8000" step="50" value="520" onchange="setScratchTextDimension('height', this.value)" class="w-[5.5rem] rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm">
+            </label>
           </div>
-          <textarea id="scratchpad-text" wrap="off" spellcheck="false" autocapitalize="off" placeholder="Нажми сюда или в любую пустую область и записывай решение…" class="scratchpad-textarea"></textarea>
+          <div id="scratch-text-workspace" class="scratch-text-workspace">
+            <textarea id="scratchpad-text" wrap="off" spellcheck="false" autocapitalize="off" placeholder="Нажми сюда или в любую пустую область и записывай решение…" class="scratchpad-textarea"></textarea>
+          </div>
           <div class="space-y-2"><p class="text-xs font-bold uppercase tracking-wide text-slate-500">Математические символы</p>
             <div class="scratchpad-symbols">
               <button class="scratchpad-symbol" onclick="insertScratchToken('π')">π</button>
@@ -1587,8 +1637,10 @@ function ensureScratchpad() {
   const overlay = document.getElementById('scratchpad-overlay');
   const viewport = document.getElementById('scratchpad-viewport');
   const textEditor = document.getElementById('scratchpad-text');
-  overlay.addEventListener('click', event => { if (event.target === overlay) closeScratchpad(); });
+  textEditor.style.fontSize = scratchTextFontSize + 'px';
   textEditor.addEventListener('click', placeScratchCaretAtBlankPoint);
+  textEditor.addEventListener('input', autoGrowScratchText);
+  overlay.addEventListener('click', event => { if (event.target === overlay) closeScratchpad(); });
   viewport.addEventListener('pointerdown', handleScratchPointerDown);
   viewport.addEventListener('pointermove', handleScratchPointerMove);
   viewport.addEventListener('pointerup', handleScratchPointerUp);
@@ -1598,6 +1650,9 @@ function ensureScratchpad() {
   scratchBaseWidth = Math.max(280, Math.floor(viewport.clientWidth || window.innerWidth - 32));
   scratchBaseHeight = Math.max(1200, Math.floor(window.innerHeight * 1.2));
   renderScratchCanvas();
+  if (!scratchTextWidthCustom) scratchTextWidth = Math.max(260, Math.floor(window.innerWidth - 48));
+  if (!scratchTextHeightCustom) scratchTextHeight = Math.max(360, Math.floor(window.innerHeight * 0.48));
+  applyScratchTextDimensions();
 }
 
 function openScratchpad() {
@@ -1657,6 +1712,11 @@ function clearScratchpadData() {
   }
   const textSizeLabel = document.getElementById('scratch-text-size-label');
   if (textSizeLabel) textSizeLabel.textContent = scratchTextFontSize + ' px';
+  scratchTextWidthCustom = false;
+  scratchTextHeightCustom = false;
+  scratchTextWidth = Math.max(260, Math.floor(window.innerWidth - 48));
+  scratchTextHeight = Math.max(360, Math.floor(window.innerHeight * .48));
+  applyScratchTextDimensions();
   const viewport = document.getElementById('scratchpad-viewport');
   scratchBaseWidth = Math.max(280, Math.floor((viewport && viewport.clientWidth) || (window.innerWidth - 48)));
   scratchBaseHeight = Math.max(1200, Math.floor(window.innerHeight * 1.2));
@@ -1721,6 +1781,41 @@ function scratchClear() {
   if (!scratchStrokes.length) return;
   if (confirm('Очистить весь рукописный черновик?')) { scratchStrokes = []; scratchRedo = []; renderScratchCanvas(); }
 }
+function applyScratchTextDimensions() {
+  const textarea = document.getElementById('scratchpad-text');
+  const widthInput = document.getElementById('scratch-text-width');
+  const heightInput = document.getElementById('scratch-text-height');
+  if (textarea) {
+    textarea.style.width = scratchTextWidth + 'px';
+    textarea.style.height = scratchTextHeight + 'px';
+  }
+  if (widthInput) widthInput.value = String(scratchTextWidth);
+  if (heightInput) heightInput.value = String(scratchTextHeight);
+}
+
+function setScratchTextDimension(kind, value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) { applyScratchTextDimensions(); return; }
+  if (kind === 'width') {
+    scratchTextWidth = Math.max(240, Math.min(5000, Math.round(n)));
+    scratchTextWidthCustom = true;
+  } else if (kind === 'height') {
+    scratchTextHeight = Math.max(220, Math.min(8000, Math.round(n)));
+    scratchTextHeightCustom = true;
+  }
+  applyScratchTextDimensions();
+}
+
+function autoGrowScratchText() {
+  const textarea = document.getElementById('scratchpad-text');
+  if (!textarea) return;
+  const wanted = Math.max(scratchTextHeight, textarea.scrollHeight + 6);
+  if (wanted > scratchTextHeight) {
+    scratchTextHeight = Math.min(8000, wanted);
+    applyScratchTextDimensions();
+  }
+}
+
 function toggleScratchFullscreen() {
   const overlay = document.getElementById('scratchpad-overlay');
   const dialog = overlay && overlay.querySelector('.scratchpad-dialog');
@@ -1731,6 +1826,14 @@ function toggleScratchFullscreen() {
   const fullscreen = !dialog.classList.contains('scratchpad-fullscreen');
   dialog.classList.toggle('scratchpad-fullscreen', fullscreen);
   overlay.classList.toggle('scratchpad-overlay-fullscreen', fullscreen);
+  if (fullscreen) {
+    if (!scratchTextWidthCustom) scratchTextWidth = Math.max(260, Math.floor(window.innerWidth));
+    if (!scratchTextHeightCustom) scratchTextHeight = Math.max(360, Math.floor(window.innerHeight));
+  } else {
+    if (!scratchTextWidthCustom) scratchTextWidth = Math.max(260, Math.floor(window.innerWidth - 48));
+    if (!scratchTextHeightCustom) scratchTextHeight = Math.max(360, Math.floor(window.innerHeight * .48));
+  }
+  applyScratchTextDimensions();
   expand && expand.classList.toggle('hidden', fullscreen);
   collapse && collapse.classList.toggle('hidden', !fullscreen);
   button.setAttribute('aria-label', fullscreen ? 'Свернуть черновик' : 'Развернуть черновик на весь экран');
@@ -2270,10 +2373,9 @@ function render() {
         ${q.year ? `<p class="text-[11px] font-bold uppercase tracking-wider text-indigo-500">${escapeHtml(sourceLabel(q))}</p>` : ''}
         <div class="math-question font-semibold text-slate-900 bg-indigo-50/50 border border-indigo-100 rounded-xl p-4 sm:p-5">${formatQuestionText(q.questionText)}</div>
         <div class="space-y-3">${area}</div>
-        <div id="solution-block" class="hidden min-w-0 max-w-full overflow-hidden bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
-          <p id="verdict-line" class="text-sm font-semibold"></p>
-          <p class="text-xs font-bold text-slate-700 uppercase tracking-wider">Подробное решение:</p>
-          <div class="solution-copy text-slate-700">${getDetailedSolutionHtml(q)}</div>
+        <div id="solution-block" class="hidden answer-feedback">
+          <p id="verdict-line" class="answer-feedback-verdict"></p>
+          <div class="solution-copy answer-solution-copy">${getAnswerSolutionHtml(q)}</div>
         </div>
         <button id="next-btn" onclick="nextQuestion()" class="hidden w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3.5 px-6 rounded-xl shadow-md">Дальше</button>
       </div>`;
