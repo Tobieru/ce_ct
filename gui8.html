@@ -1826,36 +1826,132 @@ function autoGrowScratchText() {
   if (heightInput) heightInput.value = String(scratchTextHeight);
 }
 
-function toggleScratchFullscreen() {
+function syncScratchpadFullscreenLayout(fullscreen) {
   const overlay = document.getElementById('scratchpad-overlay');
   const dialog = overlay && overlay.querySelector('.scratchpad-dialog');
+  const header = dialog && dialog.querySelector('header');
+  const tabBar = dialog && dialog.children[1];
+  const scroll = dialog && dialog.querySelector('.scratchpad-scroll');
+  const drawPanel = document.getElementById('scratch-draw-panel');
+  const textPanel = document.getElementById('scratch-text-panel');
+  const textWorkspace = document.getElementById('scratch-text-workspace');
+  const textEditor = document.getElementById('scratchpad-text');
+  const viewport = document.getElementById('scratchpad-viewport');
   const expand = document.getElementById('scratch-expand-icon');
   const collapse = document.getElementById('scratch-collapse-icon');
   const button = document.getElementById('scratch-fullscreen-button');
-  if (!overlay || !dialog || !button) return;
+  if (!overlay || !dialog || !scroll) return;
+
+  // Explicit inline layout avoids depending on conflicting mobile/Tailwind styles.
+  if (fullscreen) {
+    overlay.style.setProperty('position', 'fixed');
+    overlay.style.setProperty('inset', '0');
+    overlay.style.setProperty('z-index', '99999');
+    overlay.style.setProperty('display', 'flex');
+    overlay.style.setProperty('width', '100vw');
+    overlay.style.setProperty('height', '100dvh');
+    overlay.style.setProperty('max-height', '100dvh');
+    overlay.style.setProperty('margin', '0');
+    overlay.style.setProperty('padding', '0');
+    overlay.style.setProperty('align-items', 'stretch');
+    overlay.style.setProperty('justify-content', 'stretch');
+    overlay.style.setProperty('background', '#fff');
+
+    dialog.style.setProperty('display', 'flex');
+    dialog.style.setProperty('flex', '1 1 auto');
+    dialog.style.setProperty('width', '100%');
+    dialog.style.setProperty('height', '100%');
+    dialog.style.setProperty('min-height', '0');
+    dialog.style.setProperty('max-height', '100dvh');
+    dialog.style.setProperty('margin', '0');
+    dialog.style.setProperty('border-radius', '0');
+    dialog.style.setProperty('overflow', 'hidden');
+    dialog.style.setProperty('box-shadow', 'none');
+
+    if (header) header.style.setProperty('flex', '0 0 auto');
+    if (tabBar) tabBar.style.setProperty('flex', '0 0 auto');
+    scroll.style.setProperty('display', 'flex');
+    scroll.style.setProperty('flex', '1 1 0');
+    scroll.style.setProperty('flex-direction', 'column');
+    scroll.style.setProperty('min-height', '0');
+    scroll.style.setProperty('overflow', 'hidden');
+
+    const textMode = scratchpadTab === 'text';
+    drawPanel && drawPanel.classList.toggle('hidden', textMode);
+    textPanel && textPanel.classList.toggle('hidden', !textMode);
+    if (textMode && textPanel && textWorkspace && textEditor) {
+      textPanel.style.setProperty('display', 'flex');
+      textPanel.style.setProperty('flex', '1 1 0');
+      textPanel.style.setProperty('flex-direction', 'column');
+      textPanel.style.setProperty('min-height', '0');
+      textPanel.style.setProperty('overflow', 'hidden');
+      textWorkspace.style.setProperty('display', 'flex');
+      textWorkspace.style.setProperty('flex', '1 1 0');
+      textWorkspace.style.setProperty('flex-direction', 'column');
+      textWorkspace.style.setProperty('width', '100%');
+      textWorkspace.style.setProperty('height', 'auto');
+      textWorkspace.style.setProperty('min-height', '0');
+      textWorkspace.style.setProperty('max-height', 'none');
+      textWorkspace.style.setProperty('overflow', 'auto');
+      textEditor.style.setProperty('display', 'block');
+      textEditor.style.setProperty('flex', '1 1 auto');
+      textEditor.style.setProperty('width', '100%', 'important');
+      textEditor.style.setProperty('height', '100%', 'important');
+      textEditor.style.setProperty('min-height', '0', 'important');
+      textEditor.style.setProperty('max-height', 'none', 'important');
+      textEditor.style.setProperty('resize', 'none');
+    } else if (!textMode && drawPanel && viewport) {
+      drawPanel.style.setProperty('display', 'flex');
+      drawPanel.style.setProperty('flex', '1 1 0');
+      drawPanel.style.setProperty('flex-direction', 'column');
+      drawPanel.style.setProperty('min-height', '0');
+      viewport.style.setProperty('flex', '1 1 0');
+      viewport.style.setProperty('height', 'auto');
+      viewport.style.setProperty('min-height', '0');
+      viewport.style.setProperty('max-height', 'none');
+      viewport.style.setProperty('overflow', 'auto');
+    }
+  } else {
+    ['position','inset','z-index','display','width','height','max-height','margin','padding','align-items','justify-content','background'].forEach(k => overlay.style.removeProperty(k));
+    ['display','flex','width','height','min-height','max-height','margin','border-radius','overflow','box-shadow'].forEach(k => dialog.style.removeProperty(k));
+    if (header) header.style.removeProperty('flex');
+    if (tabBar) tabBar.style.removeProperty('flex');
+    ['display','flex','flex-direction','min-height','overflow'].forEach(k => scroll.style.removeProperty(k));
+    if (textPanel) ['display','flex','flex-direction','min-height','overflow'].forEach(k => textPanel.style.removeProperty(k));
+    if (drawPanel) ['display','flex','flex-direction','min-height'].forEach(k => drawPanel.style.removeProperty(k));
+    if (textWorkspace) ['display','flex','flex-direction','width','height','min-height','max-height','overflow'].forEach(k => textWorkspace.style.removeProperty(k));
+    if (textEditor) {
+      ['display','flex','min-height','max-height','resize'].forEach(k => textEditor.style.removeProperty(k));
+      textEditor.style.removeProperty('width');
+      textEditor.style.removeProperty('height');
+      textEditor.style.removeProperty('width');
+      textEditor.style.removeProperty('height');
+      textEditor.style.removeProperty('min-height');
+      textEditor.style.removeProperty('max-height');
+      textEditor.style.removeProperty('resize');
+      applyScratchTextDimensions();
+    }
+    if (viewport) ['flex','height','min-height','max-height','overflow'].forEach(k => viewport.style.removeProperty(k));
+  }
+  expand && expand.classList.toggle('hidden', fullscreen);
+  collapse && collapse.classList.toggle('hidden', !fullscreen);
+  if (button) {
+    button.setAttribute('aria-label', fullscreen ? 'Свернуть черновик' : 'Развернуть черновик на весь экран');
+    button.setAttribute('title', fullscreen ? 'Свернуть' : 'Полный экран');
+  }
+}
+
+function toggleScratchFullscreen() {
+  const overlay = document.getElementById('scratchpad-overlay');
+  const dialog = overlay && overlay.querySelector('.scratchpad-dialog');
+  if (!overlay || !dialog) return;
   const fullscreen = !dialog.classList.contains('scratchpad-fullscreen');
   dialog.classList.toggle('scratchpad-fullscreen', fullscreen);
   overlay.classList.toggle('scratchpad-overlay-fullscreen', fullscreen);
-  if (fullscreen) {
-    if (!scratchTextWidthCustom) scratchTextWidth = Math.max(260, Math.floor(window.innerWidth));
-    if (!scratchTextHeightCustom) scratchTextHeight = Math.max(360, Math.floor(window.innerHeight));
-  } else {
-    if (!scratchTextWidthCustom) scratchTextWidth = Math.max(260, Math.floor(Math.min(window.innerWidth - 48, 860)));
-    if (!scratchTextHeightCustom) scratchTextHeight = Math.max(360, Math.floor(window.innerHeight * .42));
-  }
-  applyScratchTextDimensions();
-  expand && expand.classList.toggle('hidden', fullscreen);
-  collapse && collapse.classList.toggle('hidden', !fullscreen);
-  button.setAttribute('aria-label', fullscreen ? 'Свернуть черновик' : 'Развернуть черновик на весь экран');
-  button.setAttribute('title', fullscreen ? 'Свернуть' : 'Полный экран');
+  syncScratchpadFullscreenLayout(fullscreen);
   requestAnimationFrame(() => {
+    syncScratchpadFullscreenLayout(fullscreen);
     const viewport = document.getElementById('scratchpad-viewport');
-    const textWorkspace = document.getElementById('scratch-text-workspace');
-    if (fullscreen && textWorkspace) {
-      if (!scratchTextWidthCustom) scratchTextWidth = Math.max(260, Math.floor(textWorkspace.clientWidth));
-      if (!scratchTextHeightCustom) scratchTextHeight = Math.max(220, Math.floor(textWorkspace.clientHeight));
-      applyScratchTextDimensions();
-    }
     if (viewport) {
       if (scratchStrokes.length === 0) scratchBaseWidth = Math.max(280, Math.floor(viewport.clientWidth || window.innerWidth - 32));
       renderScratchCanvas();
