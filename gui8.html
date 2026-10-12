@@ -10,8 +10,8 @@ window.MathJax = {
   tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
   options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'], enableMenu: false, enableExplorer: false },
   output: {
-    displayOverflow: 'linebreak',
-    linebreaks: { inline: true, width: '100%', lineleading: 0.2 }
+    displayOverflow: 'scroll',
+    linebreaks: { inline: false, width: '100%', lineleading: 0.2 }
   }
 };
 </script>
@@ -20,10 +20,24 @@ window.MathJax = {
 :root { color-scheme: light; }
 body { line-height: 1.55; }
 button { -webkit-tap-highlight-color: transparent; }
-.math-question { min-width: 0; max-width: 100%; font-size: 1.1rem; line-height: 1.8; overflow-wrap: normal; word-break: normal; overflow-x: auto; }
-.solution-copy { display: block; min-width: 0; max-width: 100%; font-size: 1rem; line-height: 1.8; overflow-wrap: normal; word-break: normal; overflow-x: auto; padding-bottom: .3rem; }
-.solution-copy mjx-container, .math-question mjx-container, .option-text mjx-container { max-width: 100%; }
+.math-question { min-width: 0; max-width: 100%; font-size: 1.08rem; line-height: 1.8; overflow-wrap: normal; word-break: normal; overflow-x: auto; overscroll-behavior-x: contain; }
+.solution-copy { display: block; min-width: 0; max-width: 100%; font-size: 1rem; line-height: 1.8; overflow-wrap: normal; word-break: normal; overflow-x: auto; overscroll-behavior-x: contain; padding-bottom: .3rem; }
+.question-math-nowrap { display: inline-block; vertical-align: baseline; max-width: 100%; overflow-x: auto; overflow-y: hidden; white-space: nowrap; overscroll-behavior-x: contain; scrollbar-width: thin; }
+.math-question mjx-container, .solution-copy mjx-container, .option-text mjx-container, .tip-formula-line mjx-container { max-width: none !important; white-space: nowrap; }
+.option-text { min-width: 0; max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; }
 .math-question mjx-container, .option-text mjx-container { vertical-align: middle; }
+.tip-body { min-width: 0; max-width: 100%; font-size: .94rem; line-height: 1.75; color: #334155; overflow-wrap: anywhere; word-break: normal; }
+.tip-body p { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+.tip-body p + p { margin-top: .75rem; }
+.tip-body mjx-container { display: inline-block; max-width: 100%; vertical-align: middle; white-space: nowrap; }
+.tip-formula-line { display: block; width: 100%; max-width: 100%; margin: .45rem 0; padding: .65rem .75rem; border: 1px solid #e2e8f0; border-radius: .7rem; background: #f8fafc; overflow-x: auto; overflow-y: hidden; white-space: nowrap; overscroll-behavior-x: contain; }
+.tip-rule-row { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; padding: .65rem 0; border-bottom: 1px solid #e2e8f0; }
+.tip-rule-row:last-child { border-bottom: 0; }
+.tip-rule-label { min-width: 0; flex: 1; }
+.unit-circle-demo { margin-top: .75rem; padding: .75rem; border: 1px solid #bfdbfe; border-radius: .85rem; background: #eff6ff; }
+.unit-circle-demo svg { display: block; width: min(100%, 300px); height: auto; margin: 0 auto; }
+.unit-circle-axis-note { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; margin-top: .5rem; }
+.unit-circle-axis-note span { padding: .5rem; border-radius: .6rem; background: #fff; text-align: center; font-size: .82rem; font-weight: 700; color: #1e40af; }
 mjx-container, mjx-container * { pointer-events: none !important; }
 mjx-container:focus, mjx-container *:focus { outline: none !important; }
 mjx-container { -webkit-user-select: none; user-select: none; }
@@ -37,6 +51,44 @@ mjx-container { -webkit-user-select: none; user-select: none; }
 .menu-action-title { font-size:1.02rem; font-weight:750; line-height:1.35; color:#12304a; }
 .menu-action-description { font-size:.84rem; line-height:1.5; color:#64748b; }
 .topic-panel { border:1px solid #e2e8f0; background:#fff; border-radius:1rem; padding:1rem; }
+.scratchpad-overlay { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; background: rgba(15,23,42,.58); padding: .75rem; }
+.scratchpad-overlay.hidden { display: none; }
+.scratchpad-overlay.scratchpad-overlay-fullscreen { padding: 0; align-items: stretch; }
+.scratchpad-dialog { width: min(100%, 900px); max-height: 96dvh; display: flex; flex-direction: column; overflow: hidden; border-radius: 1.2rem; background: white; box-shadow: 0 24px 70px rgba(15,23,42,.3); }
+.scratchpad-dialog.scratchpad-fullscreen { width: 100vw; height: 100dvh; max-height: 100dvh; border-radius: 0; }
+.scratchpad-dialog.scratchpad-fullscreen .scratchpad-scroll { flex: 1; min-height: 0; overflow: auto; }
+.scratchpad-dialog.scratchpad-fullscreen #scratch-text-panel:not(.hidden) { display: flex; flex: 1; flex-direction: column; min-height: 0; }
+.scratchpad-dialog.scratchpad-fullscreen #scratchpad-text { flex: 1; min-height: 0; max-height: none; resize: none; }
+.scratchpad-dialog.scratchpad-fullscreen #scratch-draw-panel:not(.hidden) { display: flex; flex: 1; flex-direction: column; min-height: 0; }
+.scratchpad-dialog.scratchpad-fullscreen #scratch-draw-panel > .scratchpad-toolbar:first-child { order: 3; }
+.scratchpad-dialog.scratchpad-fullscreen #scratch-draw-panel > .scratchpad-toolbar:nth-child(2) { order: 4; }
+.scratchpad-dialog.scratchpad-fullscreen #scratch-draw-panel > p { order: 2; }
+.scratchpad-dialog.scratchpad-fullscreen #scratchpad-viewport { order: 1; flex: 1; height: auto; min-height: 160px; max-height: none; }
+.scratchpad-scroll { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.scratchpad-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: .45rem; }
+.scratchpad-tool { min-height: 38px; padding: .5rem .7rem; border: 1px solid #cbd5e1; border-radius: .65rem; background: #fff; color: #334155; font-size: .82rem; font-weight: 650; }
+.scratchpad-tool.active { border-color: #4f46e5; background: #eef2ff; color: #3730a3; }
+.scratchpad-tool:focus-visible { outline: 2px solid #818cf8; outline-offset: 2px; }
+.scratchpad-viewport { height: min(48dvh, 460px); min-height: 240px; overflow: auto; border: 1px solid #cbd5e1; border-radius: .8rem; background: #fff; touch-action: none; overscroll-behavior: contain; }
+#scratchpad-canvas { display: block; background: white; touch-action: none; }
+.scratchpad-symbols { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: .4rem; }
+.scratchpad-symbol { min-width: 0; min-height: 38px; padding: .45rem .15rem; border: 1px solid #cbd5e1; border-radius: .55rem; background: #f8fafc; color: #1e293b; font-size: .9rem; font-weight: 600; }
+#scratchpad-text, .scratchpad-textarea { display:block; box-sizing:border-box; width:100%; min-width:0; min-height:22dvh; max-height:48dvh; resize:both; border:1px solid #cbd5e1; border-radius:.8rem; padding:.9rem; color:#0f172a; background:#fff; font:1rem/1.8 ui-monospace,SFMono-Regular,Consolas,monospace; tab-size:4; }
+#scratchpad-text { overflow:auto; white-space:pre; background-image:linear-gradient(transparent calc(100% - 1px), #e2e8f0 1px); background-size:100% 1.8em; background-origin:content-box; }
+.tip-plain-formula { display:flex; flex-wrap:wrap; align-items:baseline; gap:.25rem .4rem; box-sizing:border-box; min-width:0; width:100%; max-width:100%; margin:.55rem 0; padding:.7rem .8rem; border:1px solid #dbeafe; border-radius:.7rem; background:#eff6ff; white-space:normal; overflow-wrap:anywhere; word-break:normal; line-height:1.65; }
+.tip-plain-formula > span { min-width:0; max-width:100%; overflow-wrap:anywhere; }
+.tip-plain-formula .formula-term { display:inline; }
+.tip-topic-filters { display:flex; flex-wrap:wrap; gap:.45rem; margin:.75rem 0 1rem; }
+.tip-topic-chip { border:1px solid #cbd5e1; border-radius:999px; padding:.5rem .8rem; background:#fff; color:#475569; font-size:.8rem; font-weight:700; }
+.tip-topic-chip.active { border-color:#4f46e5; background:#eef2ff; color:#3730a3; }
+.tip-geometry-legend { display:grid; grid-template-columns:1fr; gap:.35rem; padding:.75rem; border-radius:.75rem; background:#f8fafc; border:1px solid #e2e8f0; }
+@media (max-width: 520px) {
+  .scratchpad-overlay { align-items: flex-end; padding: 0; }
+  .scratchpad-dialog { width: 100%; max-height: 96dvh; border-radius: 1.2rem 1.2rem 0 0; }
+  .scratchpad-tool { padding: .45rem .55rem; font-size: .78rem; }
+  .scratchpad-viewport { height: 44dvh; min-height: 215px; }
+  .scratchpad-symbols { grid-template-columns: repeat(4, minmax(0,1fr)); }
+}
 @media (max-width:390px) { .menu-action { gap:.75rem; padding:.85rem; } .menu-icon { width:2.7rem; height:2.7rem; } .menu-action-title { font-size:.96rem; } .menu-action-description { font-size:.78rem; } }
 .option-btn.is-correct { background: #d1fae5 !important; border-color: #10b981 !important; color: #065f46 !important; box-shadow: 0 0 0 1px #6ee7b7; }
 .option-btn.is-wrong { background: #ffe4e6 !important; border-color: #f43f5e !important; color: #881337 !important; box-shadow: 0 0 0 1px #fda4af; }
@@ -46,6 +98,34 @@ mjx-container { -webkit-user-select: none; user-select: none; }
 .option-btn.is-missed .option-label { background: #fde68a !important; color: #92400e !important; }
 .top-action { padding: .55rem .9rem; white-space: nowrap; }
 @media (max-width: 390px) { .top-action { padding: .5rem .65rem; font-size: .72rem; } }
+.scratch-text-workspace { box-sizing:border-box; width:100%; height:42dvh; min-height:230px; max-height:none; overflow:auto; overscroll-behavior:contain; border:1px solid #cbd5e1; border-radius:.85rem; background:#fff; background-image:linear-gradient(#e2e8f0 1px,transparent 1px); background-size:100% 1.8em; }
+#scratchpad-text { display:block; box-sizing:border-box; width:100%; height:520px; min-width:240px; min-height:220px; max-width:none; max-height:none; margin:0; resize:none; border:0; border-radius:0; padding:.75rem; color:#0f172a; background:transparent; background-image:none; font:16px/1.8 ui-monospace,SFMono-Regular,Consolas,monospace; }
+#scratchpad-text:focus { outline:none; }
+.scratchpad-dialog.scratchpad-fullscreen #scratch-text-panel:not(.hidden) { flex:1; min-height:0; display:flex; flex-direction:column; }
+.scratchpad-dialog.scratchpad-fullscreen #scratch-text-workspace { flex:1; min-height:0; height:auto; max-height:none; }
+.scratchpad-dialog.scratchpad-fullscreen #scratchpad-text { min-height:100%; }
+.scratchpad-dialog.scratchpad-fullscreen #scratch-draw-panel:not(.hidden) { flex:1; min-height:0; display:flex; flex-direction:column; }
+.scratchpad-dialog.scratchpad-fullscreen .scratchpad-scroll { display:flex; flex-direction:column; min-height:0; overflow:hidden; }
+.scratchpad-dialog.scratchpad-fullscreen #scratchpad-viewport { flex:1; min-height:0; height:auto; max-height:none; }
+#scratchpad-overlay.scratchpad-overlay-fullscreen { position:fixed; inset:0; z-index:99999; width:100vw; height:100vh; height:100dvh; margin:0; padding:0; align-items:stretch; justify-content:stretch; background:#fff; }
+#scratchpad-overlay.scratchpad-overlay-fullscreen .scratchpad-dialog { box-sizing:border-box; display:flex; flex-direction:column; width:100%; height:100%; min-height:0; max-height:none; margin:0; border:0; border-radius:0; overflow:hidden; box-shadow:none; }
+.answer-feedback { box-sizing:border-box; width:100%; margin-top:.2rem; padding:1rem; border:0; border-radius:.9rem; font-size:.98rem; line-height:1.75; }
+.answer-feedback-correct { background:#dcfce7; color:#14532d; }
+.answer-feedback-wrong { background:#ffe4e6; color:#881337; }
+.answer-feedback-verdict { margin:0 0 .35rem; font-weight:800; font-size:1rem; }
+.answer-solution-copy { min-width:0; max-width:100%; font-weight:400; line-height:1.75; overflow-wrap:normal; word-break:normal; }
+.answer-solution-copy p { margin:.25rem 0; }
+.answer-solution-copy div + div { margin-top:.25rem; }
+.answer-solution-copy mjx-container { max-width:100%; }
+.option-explanation { display:block; width:100%; margin-top:.65rem; padding:0; border:0; font-weight:400; line-height:1.75; white-space:normal; overflow-wrap:normal; word-break:normal; }
+.option-explanation .answer-feedback-verdict { margin-bottom:.3rem; }
+.option-explanation .answer-correct-answer { margin:.15rem 0 .3rem; font-weight:650; }
+#scratch-text-workspace { touch-action:pan-x pan-y; }
+#scratchpad-fullscreen-overlay { display:none; position:fixed !important; inset:0 !important; z-index:2147483647 !important; width:100vw !important; height:100vh !important; height:100dvh !important; margin:0 !important; padding:0 !important; overflow:hidden !important; background:#000 !important; color:#fff !important; }
+#scratchpad-fullscreen-overlay.is-visible { display:block !important; }
+#scratchpad-fullscreen-text { position:absolute !important; inset:0 !important; display:block !important; box-sizing:border-box !important; width:100% !important; height:100% !important; min-width:0 !important; min-height:0 !important; max-width:none !important; max-height:none !important; margin:0 !important; padding:calc(env(safe-area-inset-top, 0px) + 62px) 22px calc(env(safe-area-inset-bottom, 0px) + 24px) !important; border:0 !important; border-radius:0 !important; outline:none !important; resize:none !important; overflow:auto !important; background:#000 !important; background-image:none !important; color:#fff !important; caret-color:#fff !important; font-family:ui-monospace,SFMono-Regular,Consolas,monospace !important; line-height:1.75 !important; white-space:pre-wrap !important; overflow-wrap:break-word !important; tab-size:4; }
+#scratchpad-fullscreen-collapse { position:absolute !important; top:calc(env(safe-area-inset-top, 0px) + 10px) !important; right:calc(env(safe-area-inset-right, 0px) + 10px) !important; z-index:2 !important; display:flex !important; align-items:center !important; justify-content:center !important; width:46px !important; height:46px !important; padding:0 !important; border:1px solid rgba(255,255,255,.2) !important; border-radius:50% !important; background:rgba(35,35,35,.92) !important; color:#fff !important; -webkit-tap-highlight-color:transparent; }
+#scratchpad-fullscreen-collapse svg { display:block; width:24px; height:24px; }
 </style>
 </head>
 <body class="bg-slate-100 text-slate-900 min-h-screen flex flex-col font-sans">
@@ -219,6 +299,8 @@ let isTimerOn = false;
 let currentPracticeSession = null;
 let lastPracticeClosed = 0;
 let multiSelection = new Set();
+let materialsTab = 'score';
+let selectedTipsTopic = 'all';
 let infinitePracticeSkillId = null;
 let infinitePracticeTopicLabel = null;
 let infinitePracticeTitle = '';
@@ -246,12 +328,152 @@ const SKILL_LABELS = {
   'exponential-inequality-smallest-integer': 'Показательные неравенства'
 };
 
-function getTopicLabel(category) {
-  return String(category || '').replace(/\s*\(ЦЭ\/ЦТ\s+\d{4}\)$/i, '').trim() || 'Другие темы';
+const SKILL_TOPICS = {
+  'fraction-to-natural-gt1': 'Дроби и числовые выражения',
+  'triangle-true-statement': 'Геометрия',
+  'rational-inequality-x2-over-a-x': 'Неравенства',
+  'exponential-inequality-smallest-integer': 'Неравенства',
+  'log-sum-product-same-base': 'Логарифмы',
+  'log-equation-product-times': 'Логарифмы',
+  'linear-parallel-slope': 'Функции',
+  'function-parity-neither': 'Функции',
+  'intervals-true-statements': 'Числовые промежутки',
+  'expression-sense-at-negative': 'Корни и область определения',
+  'gcd-candy-sets': 'Делимость и числа',
+  'division-remainder-formula': 'Делимость и числа',
+  'sum-multiples-in-interval': 'Делимость и числа',
+  'quadratic-product-of-roots': 'Квадратные уравнения',
+  'purchase-change-kopecks': 'Текстовые задачи',
+  'trig-zero-argument': 'Тригонометрия',
+  'arcsin-expression-value': 'Тригонометрия'
+};
+
+function getTopicLabel(category, skillId = null) {
+  if (skillId && SKILL_TOPICS[skillId]) return SKILL_TOPICS[skillId];
+  const raw = String(category || '').replace(/\s*\(ЦЭ\/ЦТ\s+\d{4}\)$/i, '').trim();
+  if (/обратные тригонометрические|^тригонометрия/i.test(raw)) return 'Тригонометрия';
+  if (/логарифм/i.test(raw)) return 'Логарифмы';
+  if (/неравенств/i.test(raw)) return 'Неравенства';
+  if (/линейная функция|ч[её]тност[ьи] функций/i.test(raw)) return 'Функции';
+  if (/делимость|НОД наборов|суммы кратных/i.test(raw)) return 'Делимость и числа';
+  return raw || 'Другие темы';
+}
+
+function getTopicForQuestion(question) {
+  return getTopicLabel(question && question.category, question && question.skillId);
+}
+
+function formatQuestionText(text) {
+  return String(text || '').replace(/\$([^$]+)\$/g, (_, formula) =>
+    '<span class="question-math-nowrap">$' + formula + '$</span>'
+  );
 }
 
 function getSkillLabel(skillId) {
   return SKILL_LABELS[skillId] || String(skillId || 'Общий навык').replace(/[-_]+/g, ' ');
+}
+
+function getDetailedSolutionHtml(q) {
+  const id = q && q.skillId;
+  let rule = '';
+
+  if (id === 'log-sum-product-same-base') {
+    rule = `<p>По свойству логарифмов: <strong>сумма логарифмов с одинаковым основанием равна логарифму произведения аргументов.</strong></p>
+      <div class="rounded-lg bg-white/80 border border-slate-200 p-3 text-center">$\\log_a b+\\log_a c=\\log_a(bc),\\quad a>0,\\ a\\ne1,\\ b,c>0.$</div>
+      <p>Вычисляем произведение аргументов и оставляем прежнее основание логарифма.</p>`;
+  } else if (id === 'log-equation-product-times') {
+    rule = `<p>Сначала упрощаем разность логарифмов по свойству:</p>
+      <div class="rounded-lg bg-white/80 border border-slate-200 p-3 text-center">$\\log_a u-\\log_a v=\\log_a\\frac{u}{v}.$</div>
+      <p>Затем удобно сделать замену $t=\\log_a x$ и решить полученное квадратное уравнение. В конце возвращаемся к $x$ и проверяем область допустимых значений.</p>`;
+  } else if (id === 'linear-parallel-slope') {
+    rule = `<p>Для прямой $y=kx+b$ число $k$ — угловой коэффициент. <strong>Разные прямые параллельны, если их угловые коэффициенты равны, а свободные члены различаются.</strong></p>
+      <div class="rounded-lg bg-white/80 border border-slate-200 p-3 text-center">$k_1=k_2,\\qquad b_1\\ne b_2.$</div>
+      <p>Значит, сравниваем только коэффициенты при $x$; свободный член может быть другим.</p>`;
+  } else if (id === 'trig-zero-argument') {
+    const isSine = String(q.questionText || '').includes('\\sin');
+    rule = isSine
+      ? `<p>На единичной окружности $\\cos x$ — координата точки по горизонтали (ось $x$), а $\\sin x$ — координата по вертикали (ось $y$).</p>
+        <p>Синус равен нулю, когда точка лежит на горизонтальной оси: её вертикальная координата равна нулю.</p>
+        <div class="rounded-lg bg-white/80 border border-slate-200 p-3 text-center">$\\sin x=0\\iff x=\\pi k,\\quad k\\in\\mathbb Z.$</div>
+        <p>Например, при $x=-\\pi$ точка окружности находится в положении $(-1,0)$: поэтому $\\sin(-\\pi)=0$, а $\\cos(-\\pi)=-1$.</p>`
+      : `<p>На единичной окружности $\\cos x$ — горизонтальная координата точки, а $\\sin x$ — вертикальная. Косинус равен нулю, когда горизонтальная координата равна нулю, то есть точка находится на вертикальной оси.</p>
+        <div class="rounded-lg bg-white/80 border border-slate-200 p-3 text-center">$\\cos x=0\\iff x=\\frac{\\pi}{2}+\\pi k,\\quad k\\in\\mathbb Z.$</div>
+        <p>Поэтому значения вида $-\\frac{\\pi}{2}$ и $-\\frac{3\\pi}{2}$ дают нулевой косинус, а $\\cos(-\\pi)=-1$.</p>`;
+  } else if (id === 'arcsin-expression-value') {
+    rule = `<p>Функция $\\arcsin t$ возвращает угол в пределах $[-\\frac{\\pi}{2};\\frac{\\pi}{2}]$, синус которого равен $t$.</p>
+      <div class="rounded-lg bg-white/80 border border-slate-200 p-3 space-y-1">
+        <p>$\\arcsin(-1)=-\\frac{\\pi}{2}$</p>
+        <p>$\\arcsin(-\\frac12)=-\\frac{\\pi}{6}$</p>
+        <p>$\\arcsin(-\\frac{\\sqrt2}{2})=-\\frac{\\pi}{4}$</p>
+        <p>$\\arcsin(-\\frac{\\sqrt3}{2})=-\\frac{\\pi}{3}.$</p>
+      </div>
+      <p>Подставляем табличное значение в исходное выражение и упрощаем.</p>`;
+  } else if (id === 'function-parity-neither') {
+    rule = `<p>Проверяем чётность и нечётность по определениям. Сначала область определения должна быть симметрична относительно нуля.</p>
+      <div class="rounded-lg bg-white/80 border border-slate-200 p-3 space-y-1">
+        <p>Чётная: $f(-x)=f(x).$</p>
+        <p>Нечётная: $f(-x)=-f(x).$</p>
+      </div>
+      <p>Если ни одно равенство не выполняется (или область определения несимметрична), функция не является ни чётной, ни нечётной.</p>`;
+  } else if (id === 'triangle-true-statement') {
+    rule = `<p>Полезные быстрые факты для таких утверждений:</p>
+      <div class="rounded-lg bg-white/80 border border-slate-200 p-3 space-y-1">
+        <p>Равносторонний треугольник: $a=\\frac{P}{3}.$</p>
+        <p>Равнобедренный треугольник с основанием $b$: $a=\\frac{P-b}{2}.$</p>
+        <p>Медиана, проведённая к гипотенузе прямоугольного треугольника, равна половине гипотенузы: $m=\\frac{c}{2}.$</p>
+      </div>
+      <p>Подставляем числа из каждого утверждения и проверяем, какое из них выполняется.</p>`;
+  } else if (id === 'gcd-candy-sets') {
+    rule = `<p>Чтобы разделить несколько видов конфет на максимально возможное число одинаковых наборов без остатка, нужно найти <strong>наибольший общий делитель (НОД)</strong> всех количеств.</p>
+      <div class="rounded-lg bg-white/80 border border-slate-200 p-3 text-center">$N=\\operatorname{НОД}(a,b,c).$</div>
+      <p>Каждое количество конфет делится на $N$ без остатка, а увеличить число наборов нельзя.</p>`;
+  } else if (id === 'division-remainder-formula') {
+    rule = `<p>При делении с остатком действует одно правило:</p>
+      <div class="rounded-lg bg-white/80 border border-slate-200 p-3 text-center">$\\text{делимое}=\\text{делитель}\\cdot\\text{неполное частное}+\\text{остаток}.$</div>
+      <p>Подставляем известные делитель, частное и остаток в эту формулу.</p>`;
+  } else if (id === 'quadratic-product-of-roots') {
+    rule = `<p>По теореме Виета для $x^2+px+q=0$ сумма корней равна $-p$, а произведение корней равно свободному члену $q$.</p>
+      <div class="rounded-lg bg-white/80 border border-slate-200 p-3 text-center">$x_1x_2=q.$</div>
+      <p>Ищем уравнение с нужным свободным членом и проверяем, что у него есть действительные корни.</p>`;
+  } else if (id === 'expression-sense-at-negative') {
+    rule = `<p>Для выражений с корнями проверяем знак подкоренного выражения:</p>
+      <div class="rounded-lg bg-white/80 border border-slate-200 p-3 space-y-1">
+        <p>Под чётным корнем: $A\\ge0.$</p>
+        <p>Нечётный корень определён при любом действительном $A$.</p>
+        <p>Если корень стоит в знаменателе, он дополнительно не должен быть равен нулю.</p>
+      </div>`;
+  } else if (id === 'rational-inequality-x2-over-a-x') {
+    rule = `<p>Квадрат числа неотрицателен: $x^2\\ge0$, а дробь отрицательна, когда числитель положителен и знаменатель отрицателен. Случай $x=0$ отдельно исключается, потому что тогда дробь равна нулю.</p>`;
+  } else if (id === 'exponential-inequality-smallest-integer') {
+    rule = `<p>В показательных неравенствах удобно привести степени к одинаковому основанию. При основании больше единицы знак неравенства сохраняется при сравнении показателей.</p>`;
+  } else if (id === 'intervals-true-statements') {
+    rule = `<p>Для промежутков аккуратно проверяй скобки: круглая скобка означает, что граница не входит, квадратная — что входит. Для проверки целых чисел всегда выписывай допустимые целые значения, а не только длину промежутка.</p>`;
+  } else if (id === 'sum-multiples-in-interval') {
+    rule = `<p>Сначала перечисляем все кратные числа, которые строго больше нижней и строго меньше верхней границы. Если они образуют арифметическую прогрессию, можно сложить их по формуле $S_n=\\frac{(a_1+a_n)n}{2}.$</p>`;
+  }
+
+  if (!rule) return q && q.solution ? q.solution : '';
+  return `<div class="space-y-3">
+    <section class="rounded-xl border border-indigo-100 bg-indigo-50/70 p-3 space-y-2">
+      <p class="text-[11px] font-bold uppercase tracking-wider text-indigo-800">Ключевое правило</p>
+      <div class="text-sm leading-7 text-slate-800">${rule}</div>
+    </section>
+    <section class="space-y-1">
+      <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Применяем к заданию</p>
+      <div class="text-sm leading-7">${q.solution || 'Подставь данные из условия в правило выше и проверь ответ.'}</div>
+    </section>
+  </div>`;
+}
+
+function getAnswerSolutionHtml(q) {
+  let html = String(getDetailedSolutionHtml(q) || (q && q.solution) || '');
+  html = html
+    .replace(/<p[^>]*>\s*Ключевое правило\s*<\/p>/gi, '')
+    .replace(/<p[^>]*>\s*Применяем к заданию\s*<\/p>/gi, '')
+    .replace(/\sclass="[^"]*"/g, '')
+    .replace(/<section\b/gi, '<div')
+    .replace(/<\/section>/gi, '</div>');
+  return html;
 }
 
 function safeParseArray(raw) {
@@ -397,7 +619,7 @@ function getInfinitePracticePool() {
   return questions.filter(q => {
     // При выборе подтемы собираем все задания этого навыка, даже если они из разных лет/разделов.
     if (infinitePracticeSkillId) return q.skillId === infinitePracticeSkillId;
-    if (infinitePracticeTopicLabel) return getTopicLabel(q.category) === infinitePracticeTopicLabel;
+    if (infinitePracticeTopicLabel) return getTopicForQuestion(q) === infinitePracticeTopicLabel;
     return true;
   });
 }
@@ -420,6 +642,7 @@ function getNextInfiniteQuestion() {
 }
 
 function startInfinitePractice(skillId = null, topicLabel = null, displayLabel = '') {
+  clearScratchpadData();
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
   timerEnabled = false;
   timerInterval = null;
@@ -455,6 +678,7 @@ function startInfinitePractice(skillId = null, topicLabel = null, displayLabel =
 }
 
 function finishInfinitePractice() {
+  clearScratchpadData();
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
   if (infiniteAnsweredCount === 0) {
     currentScreen = 'main-menu';
@@ -463,11 +687,21 @@ function finishInfinitePractice() {
   }
   testKind = 'infinite-finished';
   currentTestLabel = 'Бесконечная практика: ' + infinitePracticeTitle;
+  clearScratchpadData();
   currentScreen = 'result-screen';
   render();
 }
 function openTestConfig() { currentScreen = 'config-test-screen'; render(); }
 function openMaterials() { currentScreen = 'materials-screen'; render(); }
+function setMaterialsTab(tab) {
+  materialsTab = tab === 'tips' ? 'tips' : 'score';
+  render();
+}
+function setTipsTopic(topic) {
+  selectedTipsTopic = String(topic || 'all');
+  render();
+}
+function openTopicsMenu() { currentScreen = 'topics-menu'; render(); }
 function openErrorsMenu() { currentScreen = 'errors-menu'; render(); }
 
 function updateMarkPreview(v) {
@@ -495,6 +729,7 @@ function buildRandomOrderedTest() {
 }
 
 function startNewTest() {
+  clearScratchpadData();
   timerEnabled = isTimerOn;
   testDurationMinutes = selectedTimerMinutes;
 
@@ -539,6 +774,7 @@ function startTimerInterval() {
       clearInterval(timerInterval);
       timerInterval = null;
       alert('Время вышло!');
+      clearScratchpadData();
       currentScreen = 'result-screen';
       render();
     }
@@ -961,6 +1197,7 @@ function makeAnalog(original, usedSig) {
 }
 
 function startErrorPractice(category, skillId = null) {
+  clearScratchpadData();
   if (timerInterval) clearInterval(timerInterval);
   timerInterval = null;
   timerEnabled = false;
@@ -969,7 +1206,7 @@ function startErrorPractice(category, skillId = null) {
   const ids = getErrors().filter(id => {
     const original = questions.find(q => String(q.id) === String(id));
     if (!original) return false;
-    const topicMatches = Boolean(skillId) || !topic || getTopicLabel(original.category) === topic;
+    const topicMatches = Boolean(skillId) || !topic || getTopicForQuestion(original) === topic;
     const skillMatches = !skillId || String(original.skillId) === String(skillId);
     return topicMatches && skillMatches;
   });
@@ -1016,6 +1253,7 @@ function exitErrorPractice() {
   if (!confirm(msg)) return;
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
   finishErrorPracticeSession(true);
+  clearScratchpadData();
   answeredCurrent = false;
   multiSelection = new Set();
   currentScreen = 'errors-menu';
@@ -1056,11 +1294,12 @@ function afterAnswer(isCorrect, points, verdictText, verdictOk) {
   const solutionBlock = document.getElementById('solution-block');
   const nextButton = document.getElementById('next-btn');
   if (verdict) {
-    verdict.textContent = verdictText;
-    verdict.classList.remove('text-emerald-700', 'text-rose-700');
-    verdict.classList.add(verdictOk ? 'text-emerald-700' : 'text-rose-700');
+    verdict.textContent = verdictOk ? 'Корректно!' : 'Неверно!';
+    verdict.classList.add('answer-feedback-verdict');
   }
   if (solutionBlock) {
+    solutionBlock.classList.remove('answer-feedback-correct', 'answer-feedback-wrong');
+    solutionBlock.classList.add(verdictOk ? 'answer-feedback-correct' : 'answer-feedback-wrong');
     if (q.type === 'single') solutionBlock.classList.add('hidden');
     else solutionBlock.classList.remove('hidden');
   }
@@ -1081,17 +1320,21 @@ function answerQuestion(idx) {
     if (label) label.classList.remove('bg-slate-100', 'text-slate-500');
   });
 
-  const correctButton = document.querySelector(`.option-btn[data-idx="${q.correctIndex}"]`);
-  const optionText = correctButton && correctButton.querySelector('.option-text');
+  const chosenButton = document.querySelector(`.option-btn[data-idx="${idx}"]`);
+  const optionText = chosenButton && chosenButton.querySelector('.option-text');
   if (optionText && !optionText.querySelector('.option-explanation')) {
-    optionText.insertAdjacentHTML('beforeend', `<div class="option-explanation mt-3 pt-3 border-t border-emerald-900/15"><p class="mb-1 text-[11px] font-bold uppercase tracking-wider opacity-80">Подробное решение</p><div>${q.solution}</div></div>`);
+    const correctAnswer = !ok
+      ? `<p class="answer-correct-answer">Правильный ответ: ${formatQuestionText(q.options[q.correctIndex])}</p>`
+      : '';
+    optionText.insertAdjacentHTML('beforeend',
+      `<div class="option-explanation"><p class="answer-feedback-verdict">${ok ? 'Корректно!' : 'Неверно!'}</p>${correctAnswer}<div class="answer-solution-copy">${getAnswerSolutionHtml(q)}</div></div>`);
     if (window.MathJax && window.MathJax.typesetPromise) {
       const explanation = optionText.querySelector('.option-explanation');
       if (explanation) window.MathJax.typesetPromise([explanation]).catch(() => {});
     }
   }
 
-  afterAnswer(ok, ok ? 1 : 0, ok ? 'Верно! Задание засчитано: 1 п.б.' : 'Неверно. Верный ответ выделен зелёным.', ok);
+  afterAnswer(ok, ok ? 1 : 0, ok ? 'Корректно!' : 'Неверно!', ok);
 }
 
 function toggleMulti(idx) {
@@ -1203,6 +1446,7 @@ function nextQuestion() {
   } else {
     if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
     if (testMode === 'error') finishErrorPracticeSession(false);
+    clearScratchpadData();
     currentScreen = 'result-screen';
     render();
   }
@@ -1264,6 +1508,582 @@ document.addEventListener('click', e => {
 }, true);
 
 const BACK_BTN = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>`;
+
+
+let scratchpadTab = 'draw';
+let scratchTool = 'pen';
+let scratchColor = '#172554';
+let scratchBrushSize = 3;
+let scratchZoom = 1;
+let scratchBackground = 'ruled';
+let scratchStrokes = [];
+let scratchRedo = [];
+let scratchCurrentStroke = null;
+let scratchBaseWidth = 800;
+let scratchBaseHeight = 1400;
+let scratchPointers = new Map();
+let scratchPanAnchor = null;
+let scratchPinchAnchor = null;
+let scratchRenderQueued = false;
+let scratchpadCreated = false;
+let scratchTextFontSize = 16;
+let scratchTextWidth = 360;
+let scratchTextHeight = 520;
+let scratchTextWidthCustom = false;
+let scratchTextHeightCustom = false;
+
+function ensureScratchpad() {
+  if (scratchpadCreated && document.getElementById('scratchpad-overlay')) return;
+  const markup = `
+  <div id="scratchpad-overlay" class="hidden scratchpad-overlay" role="dialog" aria-modal="true" aria-labelledby="scratchpad-title">
+    <div class="scratchpad-dialog">
+      <header class="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-3">
+        <div class="min-w-0"><h2 id="scratchpad-title" class="text-lg font-extrabold text-slate-900">Черновик</h2><p class="text-xs text-slate-500">Записи сохраняются, пока открыта эта страница</p></div>
+        <div class="flex items-center gap-2 shrink-0">
+          <button id="scratch-fullscreen-button" onclick="toggleScratchFullscreen()" class="scratchpad-tool" aria-label="Развернуть черновик на весь экран" title="Полный экран">
+            <svg id="scratch-expand-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8 3H3v5M3 3l5 5M16 3h5v5m0-5-5 5M3 16v5h5m-5 0 5-5m11 0v5h-5m5 0-5-5"/></svg>
+            <svg id="scratch-collapse-icon" class="hidden" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8 3v5H3m0-5 5 5M16 3v5h5m0-5-5 5M3 16h5v5m-5 0 5-5m16 0h-5v5m5 0-5-5"/></svg>
+          </button>
+          <button onclick="closeScratchpad()" class="scratchpad-tool" aria-label="Закрыть черновик">✕</button>
+        </div>
+      </header>
+      <div class="px-4 pt-3">
+        <div class="grid grid-cols-2 gap-2 rounded-xl bg-slate-100 p-1">
+          <button id="scratch-tab-draw" onclick="setScratchpadTab('draw')" class="scratchpad-tool active">✍ От руки</button>
+          <button id="scratch-tab-text" onclick="setScratchpadTab('text')" class="scratchpad-tool">⌨ Текст и символы</button>
+        </div>
+      </div>
+      <div class="scratchpad-scroll p-4 space-y-3">
+        <section id="scratch-draw-panel" class="space-y-3">
+          <div class="scratchpad-toolbar">
+            <button id="scratch-tool-pen" onclick="setScratchTool('pen')" class="scratchpad-tool active">✎ Ручка</button>
+            <button id="scratch-tool-eraser" onclick="setScratchTool('eraser')" class="scratchpad-tool">⌫ Ластик</button>
+            <button id="scratch-tool-pan" onclick="setScratchTool('pan')" class="scratchpad-tool">✋ Двигать / масштаб</button>
+            <button onclick="scratchUndo()" class="scratchpad-tool">↶ Отменить</button>
+            <button onclick="scratchRedoAction()" class="scratchpad-tool">↷ Повторить</button>
+            <button onclick="scratchClear()" class="scratchpad-tool">Очистить</button>
+          </div>
+          <div class="scratchpad-toolbar rounded-xl bg-slate-50 p-2">
+            <label class="text-xs font-semibold text-slate-600">Цвет
+              <select id="scratch-color" onchange="setScratchColor(this.value)" class="ml-1 rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm">
+                <option value="#172554">Синий</option><option value="#111827">Чёрный</option><option value="#dc2626">Красный</option><option value="#15803d">Зелёный</option><option value="#7c3aed">Фиолетовый</option>
+              </select>
+            </label>
+            <label class="flex min-w-[130px] flex-1 items-center gap-2 text-xs font-semibold text-slate-600">Толщина
+              <input id="scratch-size" type="range" min="1" max="12" value="3" oninput="setScratchBrushSize(this.value)" class="min-w-0 flex-1">
+              <span id="scratch-size-label">3</span>
+            </label>
+            <label class="text-xs font-semibold text-slate-600">Фон
+              <select id="scratch-background" onchange="setScratchBackground(this.value)" class="ml-1 rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm">
+                <option value="plain">Чистый лист</option><option value="ruled" selected>В линейку</option><option value="grid">Клетка</option>
+              </select>
+            </label>
+            <div class="ml-auto flex items-center gap-1">
+              <button onclick="changeScratchZoom(-0.2)" class="scratchpad-tool" aria-label="Уменьшить масштаб">−</button>
+              <span id="scratch-zoom-label" class="min-w-[3.5rem] text-center text-xs font-bold text-slate-600">100%</span>
+              <button onclick="changeScratchZoom(0.2)" class="scratchpad-tool" aria-label="Увеличить масштаб">+</button>
+            </div>
+          </div>
+          <p class="text-xs leading-5 text-slate-500">Лист высокий и автоматически расширяется вниз и вправо по мере письма. Выбери «Ручка», чтобы писать, «Ластик» — чтобы стирать. В режиме «Двигать / масштаб» перемещай лист одним пальцем или увеличивай двумя пальцами.</p>
+          <div id="scratchpad-viewport" class="scratchpad-viewport">
+            <canvas id="scratchpad-canvas" aria-label="Область для рукописных заметок"></canvas>
+          </div>
+        </section>
+        <section id="scratch-text-panel" class="hidden space-y-3">
+          <p class="text-sm leading-6 text-slate-600">Записывай решение обычным текстом. Нажатие в пустом месте листа позволяет начать запись с нужного отступа.</p>
+          <div class="flex items-center flex-wrap gap-2">
+            <button onclick="setScratchTextFontSize(-1)" class="scratchpad-tool" aria-label="Уменьшить размер букв">A−</button>
+            <span id="scratch-text-size-label" class="text-xs font-bold text-slate-600 min-w-[3.2rem] text-center">16 px</span>
+            <button onclick="setScratchTextFontSize(1)" class="scratchpad-tool" aria-label="Увеличить размер букв">A+</button>
+            <label class="flex items-center gap-1 text-xs font-semibold text-slate-600">Ширина, px
+              <input id="scratch-text-width" type="number" inputmode="numeric" min="240" max="5000" step="20" value="360" onchange="setScratchTextDimension('width', this.value)" class="w-[5.5rem] rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm">
+            </label>
+            <label class="flex items-center gap-1 text-xs font-semibold text-slate-600">Высота, px
+              <input id="scratch-text-height" type="number" inputmode="numeric" min="220" max="8000" step="50" value="520" onchange="setScratchTextDimension('height', this.value)" class="w-[5.5rem] rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm">
+            </label>
+          </div>
+          <div id="scratch-text-workspace" class="scratch-text-workspace">
+            <textarea id="scratchpad-text" wrap="off" spellcheck="false" autocapitalize="off" placeholder="Записывай решение…" class="scratchpad-textarea"></textarea>
+          </div>
+        </section>
+      </div>
+      <footer class="flex items-center justify-between gap-3 border-t border-slate-200 px-4 py-3">
+        <span class="text-xs text-slate-500">Черновик не отправляется в ответы теста</span>
+        <button onclick="closeScratchpad()" class="rounded-xl bg-indigo-600 px-5 py-3 text-sm font-bold text-white">Готово</button>
+      </footer>
+    </div>
+  </div>`;
+  document.body.insertAdjacentHTML('beforeend', markup);
+  scratchpadCreated = true;
+  const overlay = document.getElementById('scratchpad-overlay');
+  const viewport = document.getElementById('scratchpad-viewport');
+  const textEditor = document.getElementById('scratchpad-text');
+  textEditor.style.fontSize = scratchTextFontSize + 'px';
+  textEditor.addEventListener('click', placeScratchCaretAtBlankPoint);
+  textEditor.addEventListener('input', () => {
+    autoGrowScratchText();
+    syncScratchFullscreenText(textEditor);
+  });
+  overlay.addEventListener('click', event => { if (event.target === overlay) closeScratchpad(); });
+  viewport.addEventListener('pointerdown', handleScratchPointerDown);
+  viewport.addEventListener('pointermove', handleScratchPointerMove);
+  viewport.addEventListener('pointerup', handleScratchPointerUp);
+  viewport.addEventListener('pointercancel', handleScratchPointerUp);
+  viewport.addEventListener('lostpointercapture', handleScratchPointerUp);
+  window.addEventListener('resize', handleScratchResize);
+  scratchBaseWidth = Math.max(280, Math.floor(viewport.clientWidth || window.innerWidth - 32));
+  scratchBaseHeight = Math.max(1200, Math.floor(window.innerHeight * 1.2));
+  renderScratchCanvas();
+  if (!scratchTextWidthCustom) scratchTextWidth = Math.max(260, Math.floor(Math.min(window.innerWidth - 48, 860)));
+  if (!scratchTextHeightCustom) scratchTextHeight = Math.max(360, Math.floor(window.innerHeight * 0.42));
+  applyScratchTextDimensions();
+}
+
+function openScratchpad() {
+  ensureScratchpad();
+  document.getElementById('scratchpad-overlay').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  const textEditor = document.getElementById('scratchpad-text');
+  if (textEditor) textEditor.style.fontSize = scratchTextFontSize + 'px';
+  const textSizeLabel = document.getElementById('scratch-text-size-label');
+  if (textSizeLabel) textSizeLabel.textContent = scratchTextFontSize + ' px';
+  requestAnimationFrame(() => {
+    const viewport = document.getElementById('scratchpad-viewport');
+    if (!viewport) return;
+    if (scratchStrokes.length === 0) {
+      scratchBaseWidth = Math.max(280, Math.floor(viewport.clientWidth || window.innerWidth - 32));
+      scratchBaseHeight = Math.max(1200, Math.floor(window.innerHeight * 1.2));
+    }
+    renderScratchCanvas();
+  });
+}
+
+function closeScratchpad() {
+  const overlay = document.getElementById('scratchpad-overlay');
+  const dialog = overlay && overlay.querySelector('.scratchpad-dialog');
+  const fullscreenOverlay = document.getElementById('scratchpad-fullscreen-overlay');
+  if (fullscreenOverlay) fullscreenOverlay.classList.remove('is-visible');
+  const wasFullscreen = false;
+  const expand = document.getElementById('scratch-expand-icon');
+  const collapse = document.getElementById('scratch-collapse-icon');
+  const button = document.getElementById('scratch-fullscreen-button');
+  if (overlay && dialog) {
+    dialog.classList.remove('scratchpad-fullscreen');
+    overlay.classList.remove('scratchpad-overlay-fullscreen');
+  }
+  if (overlay) {
+    overlay.classList.add('hidden');
+    overlay.classList.remove('scratchpad-overlay-fullscreen');
+  }
+  if (dialog) dialog.classList.remove('scratchpad-fullscreen');
+  expand && expand.classList.remove('hidden');
+  collapse && collapse.classList.add('hidden');
+  if (button) {
+    button.setAttribute('aria-label', 'Развернуть черновик на весь экран');
+    button.setAttribute('title', 'Полный экран');
+  }
+  if (wasFullscreen) {
+    if (!scratchTextWidthCustom) scratchTextWidth = Math.max(260, Math.floor(Math.min(window.innerWidth - 48, 860)));
+    if (!scratchTextHeightCustom) scratchTextHeight = Math.max(360, Math.floor(window.innerHeight * .48));
+    applyScratchTextDimensions();
+  }
+  document.body.style.overflow = '';
+  scratchPointers.clear();
+  scratchCurrentStroke = null;
+}
+
+function clearScratchpadData() {
+  scratchStrokes = [];
+  scratchRedo = [];
+  scratchCurrentStroke = null;
+  scratchPointers.clear();
+  scratchPanAnchor = null;
+  scratchPinchAnchor = null;
+  scratchZoom = 1;
+  const textarea = document.getElementById('scratchpad-text');
+  if (textarea) {
+    textarea.value = '';
+    scratchTextFontSize = 16;
+    textarea.style.fontSize = scratchTextFontSize + 'px';
+  }
+  const fullscreenText = document.getElementById('scratchpad-fullscreen-text');
+  if (fullscreenText) {
+    fullscreenText.value = '';
+    fullscreenText.style.fontSize = scratchTextFontSize + 'px';
+    fullscreenText.parentElement.classList.remove('is-visible');
+  }
+  const textSizeLabel = document.getElementById('scratch-text-size-label');
+  if (textSizeLabel) textSizeLabel.textContent = scratchTextFontSize + ' px';
+  scratchTextWidthCustom = false;
+  scratchTextHeightCustom = false;
+  scratchTextWidth = Math.max(260, Math.floor(window.innerWidth - 48));
+  scratchTextHeight = Math.max(360, Math.floor(window.innerHeight * .48));
+  applyScratchTextDimensions();
+  const viewport = document.getElementById('scratchpad-viewport');
+  scratchBaseWidth = Math.max(280, Math.floor((viewport && viewport.clientWidth) || (window.innerWidth - 48)));
+  scratchBaseHeight = Math.max(1200, Math.floor(window.innerHeight * 1.2));
+  if (viewport) { viewport.scrollLeft = 0; viewport.scrollTop = 0; }
+  const zoomLabel = document.getElementById('scratch-zoom-label');
+  if (zoomLabel) zoomLabel.textContent = '100%';
+  renderScratchCanvas();
+}
+
+function setScratchpadTab(tab) {
+  scratchpadTab = tab === 'text' ? 'text' : 'draw';
+  const drawPanel = document.getElementById('scratch-draw-panel');
+  const textPanel = document.getElementById('scratch-text-panel');
+  const drawTab = document.getElementById('scratch-tab-draw');
+  const textTab = document.getElementById('scratch-tab-text');
+  if (!drawPanel) return;
+  drawPanel.classList.toggle('hidden', scratchpadTab !== 'draw');
+  textPanel.classList.toggle('hidden', scratchpadTab !== 'text');
+  drawTab.classList.toggle('active', scratchpadTab === 'draw');
+  textTab.classList.toggle('active', scratchpadTab === 'text');
+  if (scratchpadTab === 'draw') requestAnimationFrame(() => {
+    const viewport = document.getElementById('scratchpad-viewport');
+    if (viewport && scratchStrokes.length === 0) scratchBaseWidth = Math.max(280, Math.floor(viewport.clientWidth || window.innerWidth - 32));
+    renderScratchCanvas();
+  });
+}
+
+function setScratchTool(tool) {
+  scratchTool = ['pen','eraser','pan'].includes(tool) ? tool : 'pen';
+  ['pen','eraser','pan'].forEach(name => {
+    const button = document.getElementById('scratch-tool-' + name);
+    if (button) button.classList.toggle('active', scratchTool === name);
+  });
+  const canvas = document.getElementById('scratchpad-canvas');
+  if (canvas) canvas.style.cursor = scratchTool === 'pan' ? 'grab' : scratchTool === 'eraser' ? 'cell' : 'crosshair';
+}
+function setScratchColor(color) { if (/^#[0-9a-f]{6}$/i.test(color)) scratchColor = color; }
+function setScratchBrushSize(value) {
+  scratchBrushSize = Math.max(1, Math.min(12, Number(value) || 3));
+  const label = document.getElementById('scratch-size-label');
+  if (label) label.textContent = String(scratchBrushSize);
+}
+function setScratchBackground(value) {
+  scratchBackground = ['plain','ruled','grid'].includes(value) ? value : 'plain';
+  renderScratchCanvas();
+}
+function changeScratchZoom(delta) {
+  const viewport = document.getElementById('scratchpad-viewport');
+  if (!viewport) return;
+  const previousZoom = scratchZoom;
+  scratchZoom = Math.max(.6, Math.min(2.4, Math.round((scratchZoom + delta) * 10) / 10));
+  const label = document.getElementById('scratch-zoom-label');
+  if (label) label.textContent = Math.round(scratchZoom * 100) + '%';
+  const oldLeft = viewport.scrollLeft, oldTop = viewport.scrollTop;
+  renderScratchCanvas();
+  viewport.scrollLeft = oldLeft * scratchZoom / previousZoom;
+  viewport.scrollTop = oldTop * scratchZoom / previousZoom;
+}
+function scratchUndo() { if (scratchStrokes.length) { scratchRedo.push(scratchStrokes.pop()); renderScratchCanvas(); } }
+function scratchRedoAction() { if (scratchRedo.length) { scratchStrokes.push(scratchRedo.pop()); renderScratchCanvas(); } }
+function scratchClear() {
+  if (!scratchStrokes.length) return;
+  if (confirm('Очистить весь рукописный черновик?')) { scratchStrokes = []; scratchRedo = []; renderScratchCanvas(); }
+}
+function applyScratchTextDimensions() {
+  const textarea = document.getElementById('scratchpad-text');
+  const widthInput = document.getElementById('scratch-text-width');
+  const heightInput = document.getElementById('scratch-text-height');
+  if (textarea) {
+    textarea.style.width = scratchTextWidth + 'px';
+    textarea.style.height = scratchTextHeight + 'px';
+  }
+  if (widthInput) widthInput.value = String(scratchTextWidth);
+  if (heightInput) heightInput.value = String(scratchTextHeight);
+}
+
+function setScratchTextDimension(kind, value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) { applyScratchTextDimensions(); return; }
+  if (kind === 'width') {
+    scratchTextWidth = Math.max(240, Math.min(5000, Math.round(n)));
+    scratchTextWidthCustom = true;
+  } else if (kind === 'height') {
+    scratchTextHeight = Math.max(220, Math.min(8000, Math.round(n)));
+    scratchTextHeightCustom = true;
+  }
+  applyScratchTextDimensions();
+}
+
+function autoGrowScratchText() {
+  const textarea = document.getElementById('scratchpad-text');
+  if (!textarea) return;
+  const selectedHeight = scratchTextHeight;
+  textarea.style.height = 'auto';
+  const naturalHeight = Math.max(220, textarea.scrollHeight + 4);
+  const wanted = Math.max(selectedHeight, naturalHeight);
+  scratchTextHeight = Math.min(8000, wanted);
+  textarea.style.height = scratchTextHeight + 'px';
+  const heightInput = document.getElementById('scratch-text-height');
+  if (heightInput) heightInput.value = String(scratchTextHeight);
+}
+
+function ensureScratchFullscreenOverlay() {
+  let overlay = document.getElementById('scratchpad-fullscreen-overlay');
+  if (overlay) return overlay;
+  const markup = `
+    <div id="scratchpad-fullscreen-overlay" role="dialog" aria-modal="true" aria-label="Полноэкранный черновик">
+      <textarea id="scratchpad-fullscreen-text" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="" aria-label="Текстовый черновик"></textarea>
+      <button id="scratchpad-fullscreen-collapse" type="button" onclick="toggleScratchFullscreen()" aria-label="Свернуть черновик" title="Свернуть">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M9 3v6H3M3 3l6 6M15 3v6h6m0-6-6 6M3 15h6v6m-6 0 6-6m6 0 6 6m-6-6v6h6"/>
+        </svg>
+      </button>
+    </div>`;
+  document.body.insertAdjacentHTML('beforeend', markup);
+  overlay = document.getElementById('scratchpad-fullscreen-overlay');
+  const fullscreenText = document.getElementById('scratchpad-fullscreen-text');
+  fullscreenText.addEventListener('input', () => syncScratchFullscreenText(fullscreenText));
+  fullscreenText.addEventListener('click', placeScratchCaretAtBlankPoint);
+  return overlay;
+}
+
+function syncScratchFullscreenText(source = null) {
+  const normalText = document.getElementById('scratchpad-text');
+  const fullscreenText = document.getElementById('scratchpad-fullscreen-text');
+  if (!normalText || !fullscreenText) return;
+  if (source === fullscreenText) {
+    normalText.value = fullscreenText.value;
+    autoGrowScratchText();
+  } else {
+    fullscreenText.value = normalText.value;
+    fullscreenText.style.fontSize = scratchTextFontSize + 'px';
+  }
+}
+
+function toggleScratchFullscreen() {
+  const overlay = ensureScratchFullscreenOverlay();
+  const fullscreenText = document.getElementById('scratchpad-fullscreen-text');
+  const normalText = document.getElementById('scratchpad-text');
+  const isOpen = overlay.classList.contains('is-visible');
+  if (isOpen) {
+    syncScratchFullscreenText(fullscreenText);
+    overlay.classList.remove('is-visible');
+    if (normalText) {
+      normalText.value = fullscreenText.value;
+      normalText.style.fontSize = scratchTextFontSize + 'px';
+      normalText.focus();
+    }
+    return;
+  }
+
+  syncScratchFullscreenText(normalText);
+  fullscreenText.style.fontSize = scratchTextFontSize + 'px';
+  overlay.classList.add('is-visible');
+  const start = normalText ? normalText.selectionStart : 0;
+  const end = normalText ? normalText.selectionEnd : start;
+  requestAnimationFrame(() => {
+    fullscreenText.focus({ preventScroll:true });
+    try { fullscreenText.setSelectionRange(start, end); } catch (_) {}
+  });
+}
+
+function setScratchTextFontSize(delta) {
+  scratchTextFontSize = Math.max(12, Math.min(28, scratchTextFontSize + (Number(delta) || 0)));
+  const textarea = document.getElementById('scratchpad-text');
+  const label = document.getElementById('scratch-text-size-label');
+  if (textarea) textarea.style.fontSize = scratchTextFontSize + 'px';
+  const fullscreenText = document.getElementById('scratchpad-fullscreen-text');
+  if (fullscreenText) fullscreenText.style.fontSize = scratchTextFontSize + 'px';
+  if (label) label.textContent = scratchTextFontSize + ' px';
+}
+
+function placeScratchCaretAtBlankPoint(event) {
+  const textarea = event.currentTarget;
+  if (!textarea || event.button > 0) return;
+  const rect = textarea.getBoundingClientRect();
+  const style = window.getComputedStyle(textarea);
+  const fontSize = parseFloat(style.fontSize) || scratchTextFontSize || 16;
+  const lineHeight = parseFloat(style.lineHeight) || fontSize * 1.8;
+  const paddingLeft = parseFloat(style.paddingLeft) || 0;
+  const paddingTop = parseFloat(style.paddingTop) || 0;
+  const probe = document.createElement('canvas');
+  const context = probe.getContext('2d');
+  if (context) context.font = style.font;
+  const charWidth = (context && context.measureText('M').width) || fontSize * .6;
+  const x = Math.max(0, event.clientX - rect.left - paddingLeft + textarea.scrollLeft);
+  const y = Math.max(0, event.clientY - rect.top - paddingTop + textarea.scrollTop);
+  const row = Math.max(0, Math.floor(y / lineHeight));
+  const column = Math.max(0, Math.floor(x / charWidth));
+  const lines = textarea.value.split('\n');
+  const rowMissing = row >= lines.length;
+  const line = rowMissing ? '' : lines[row];
+  if (rowMissing || column > line.length) {
+    while (lines.length <= row) lines.push('');
+    if (lines[row].length < column) lines[row] += ' '.repeat(column - lines[row].length);
+    textarea.value = lines.join('\n');
+    let caret = 0;
+    for (let i = 0; i < row; i++) caret += lines[i].length + 1;
+    caret += Math.min(column, lines[row].length);
+    textarea.setSelectionRange(caret, caret);
+    if (textarea.id === 'scratchpad-text') autoGrowScratchText();
+    else syncScratchFullscreenText(textarea);
+  }
+}
+
+function insertScratchToken(token) {
+  const textarea = document.getElementById('scratchpad-text');
+  if (!textarea) return;
+  const start = textarea.selectionStart ?? textarea.value.length;
+  const end = textarea.selectionEnd ?? start;
+  textarea.setRangeText(token, start, end, 'end');
+  textarea.focus();
+  // For paired templates, place the caret inside the pair rather than after the closing bracket.
+  if (token === '√()' || token === '^()') {
+    const caret = start + token.length - 1;
+    textarea.setSelectionRange(caret, caret);
+  }
+}
+function handleScratchResize() {
+  if (!scratchpadCreated) return;
+  const overlay = document.getElementById('scratchpad-overlay');
+  const viewport = document.getElementById('scratchpad-viewport');
+  if (!overlay || overlay.classList.contains('hidden') || !viewport) return;
+  if (scratchStrokes.length === 0) {
+    scratchBaseWidth = Math.max(280, Math.floor(viewport.clientWidth || window.innerWidth - 32));
+    scratchBaseHeight = Math.max(1200, Math.floor(window.innerHeight * 1.2));
+  }
+  renderScratchCanvas();
+}
+function scratchPoint(event) {
+  const canvas = document.getElementById('scratchpad-canvas');
+  const rect = canvas.getBoundingClientRect();
+  return {x:Math.max(0,Math.min(1,(event.clientX-rect.left)/Math.max(1,rect.width))),y:Math.max(0,Math.min(1,(event.clientY-rect.top)/Math.max(1,rect.height)))};
+}
+
+function extendScratchCanvasForPoint(point) {
+  if (!point) return false;
+  const oldWidth = scratchBaseWidth, oldHeight = scratchBaseHeight;
+  let nextWidth = oldWidth, nextHeight = oldHeight;
+  if (point.x * oldWidth > oldWidth - 85 && oldWidth < 10000) nextWidth = Math.min(10000, oldWidth + Math.max(420, Math.round(oldWidth * .5)));
+  if (point.y * oldHeight > oldHeight - 85 && oldHeight < 10000) nextHeight = Math.min(10000, oldHeight + Math.max(520, Math.round(oldHeight * .5)));
+  while (nextWidth * nextHeight > 16000000) {
+    if (nextHeight > oldHeight) nextHeight = Math.max(oldHeight, nextHeight - 250);
+    else if (nextWidth > oldWidth) nextWidth = Math.max(oldWidth, nextWidth - 250);
+    else break;
+  }
+  if (nextWidth === oldWidth && nextHeight === oldHeight) return false;
+  const sx = oldWidth / nextWidth, sy = oldHeight / nextHeight;
+  scratchStrokes.forEach(stroke => (stroke.points || []).forEach(p => { p.x *= sx; p.y *= sy; }));
+  scratchBaseWidth = nextWidth;
+  scratchBaseHeight = nextHeight;
+  renderScratchCanvas();
+  return true;
+}
+function handleScratchPointerDown(event) {
+  const viewport = document.getElementById('scratchpad-viewport');
+  const canvas = document.getElementById('scratchpad-canvas');
+  const overlay = document.getElementById('scratchpad-overlay');
+  if (!viewport || !canvas || !overlay || overlay.classList.contains('hidden') || scratchpadTab !== 'draw') return;
+  if (scratchTool === 'pen' || scratchTool === 'eraser') {
+    if (event.target !== canvas) return;
+    event.preventDefault();
+    viewport.setPointerCapture?.(event.pointerId);
+    const point = scratchPoint(event);
+    scratchCurrentStroke = {tool:scratchTool,color:scratchColor,size:scratchTool==='eraser'?scratchBrushSize*4+8:scratchBrushSize,points:[point],pointerId:event.pointerId};
+    scratchStrokes.push(scratchCurrentStroke);
+    scratchRedo = [];
+    extendScratchCanvasForPoint(point);
+    queueScratchRender();
+    return;
+  }
+  if (scratchTool === 'pan') {
+    event.preventDefault();
+    viewport.setPointerCapture?.(event.pointerId);
+    scratchPointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+    if(scratchPointers.size===1){
+      scratchPanAnchor={x:event.clientX,y:event.clientY,left:viewport.scrollLeft,top:viewport.scrollTop};
+      scratchPinchAnchor=null;
+    } else if(scratchPointers.size===2){
+      const pts=[...scratchPointers.values()];
+      scratchPinchAnchor={distance:Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y),zoom:scratchZoom};
+      scratchPanAnchor=null;
+    }
+  }
+}
+function handleScratchPointerMove(event) {
+  const overlay=document.getElementById('scratchpad-overlay');
+  if(!scratchpadCreated || !overlay || overlay.classList.contains('hidden'))return;
+  const viewport=document.getElementById('scratchpad-viewport');
+  if(scratchCurrentStroke && scratchCurrentStroke.pointerId===event.pointerId && (scratchTool==='pen'||scratchTool==='eraser')){
+    event.preventDefault();
+    const point = scratchPoint(event);
+    scratchCurrentStroke.points.push(point);
+    extendScratchCanvasForPoint(point);
+    queueScratchRender();
+    return;
+  }
+  if(scratchTool!=='pan'||!scratchPointers.has(event.pointerId))return;
+  event.preventDefault();
+  scratchPointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+  if(scratchPointers.size>=2 && scratchPinchAnchor){
+    const pts=[...scratchPointers.values()];
+    const dist=Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y);
+    const next=Math.max(.6,Math.min(2.4,scratchPinchAnchor.zoom*dist/Math.max(1,scratchPinchAnchor.distance)));
+    changeScratchZoom(next-scratchZoom);
+  } else if(scratchPointers.size===1 && scratchPanAnchor){
+    const pt=scratchPointers.get(event.pointerId);
+    viewport.scrollLeft=scratchPanAnchor.left-(pt.x-scratchPanAnchor.x);
+    viewport.scrollTop=scratchPanAnchor.top-(pt.y-scratchPanAnchor.y);
+  }
+}
+function handleScratchPointerUp(event) {
+  if(!scratchpadCreated)return;
+  if(scratchCurrentStroke && scratchCurrentStroke.pointerId===event.pointerId)scratchCurrentStroke=null;
+  scratchPointers.delete(event.pointerId);
+  const viewport=document.getElementById('scratchpad-viewport');
+  if(scratchTool==='pan'&&viewport){
+    if(scratchPointers.size===1){
+      const pt=[...scratchPointers.values()][0];
+      scratchPanAnchor={x:pt.x,y:pt.y,left:viewport.scrollLeft,top:viewport.scrollTop};
+      scratchPinchAnchor=null;
+    } else {scratchPanAnchor=null;scratchPinchAnchor=null;}
+  }
+  queueScratchRender();
+}
+function queueScratchRender() {
+  if(scratchRenderQueued)return;
+  scratchRenderQueued=true;
+  requestAnimationFrame(()=>{scratchRenderQueued=false;renderScratchCanvas();});
+}
+function renderScratchCanvas() {
+  const canvas=document.getElementById('scratchpad-canvas');
+  const viewport=document.getElementById('scratchpad-viewport');
+  if(!canvas||!viewport)return;
+  const area = Math.max(1, scratchBaseWidth * scratchBaseHeight);
+  const dpr = Math.max(1, Math.min(2.5, window.devicePixelRatio || 1, Math.sqrt(14000000 / area)));
+  const cssWidth=Math.max(1,Math.round(scratchBaseWidth*scratchZoom));
+  const cssHeight=Math.max(1,Math.round(scratchBaseHeight*scratchZoom));
+  canvas.style.width=cssWidth+'px';
+  canvas.style.height=cssHeight+'px';
+  const pixelWidth=Math.round(scratchBaseWidth*dpr),pixelHeight=Math.round(scratchBaseHeight*dpr);
+  if(canvas.width!==pixelWidth)canvas.width=pixelWidth;
+  if(canvas.height!==pixelHeight)canvas.height=pixelHeight;
+  const ctx=canvas.getContext('2d');if(!ctx)return;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,scratchBaseWidth,scratchBaseHeight);
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,scratchBaseWidth,scratchBaseHeight);
+  if(scratchBackground==='grid'||scratchBackground==='ruled'){
+    ctx.beginPath();ctx.strokeStyle=scratchBackground==='grid'?'#e0e7ff':'#dbeafe';ctx.lineWidth=.8;
+    const step=26;
+    for(let x=step;x<scratchBaseWidth;x+=step)if(scratchBackground==='grid'){ctx.moveTo(x,0);ctx.lineTo(x,scratchBaseHeight);}
+    for(let y=step;y<scratchBaseHeight;y+=step){ctx.moveTo(0,y);ctx.lineTo(scratchBaseWidth,y);}
+    ctx.stroke();
+  }
+  ctx.lineCap='round';ctx.lineJoin='round';
+  scratchStrokes.forEach(stroke=>{
+    if(!stroke.points||!stroke.points.length)return;
+    ctx.save();ctx.globalCompositeOperation=stroke.tool==='eraser'?'destination-out':'source-over';ctx.strokeStyle=stroke.color;ctx.fillStyle=stroke.color;ctx.lineWidth=stroke.size;
+    const first=stroke.points[0];ctx.beginPath();ctx.moveTo(first.x*scratchBaseWidth,first.y*scratchBaseHeight);
+    if(stroke.points.length===1)ctx.lineTo(first.x*scratchBaseWidth+.01,first.y*scratchBaseHeight+.01);
+    else for(let i=1;i<stroke.points.length;i++)ctx.lineTo(stroke.points[i].x*scratchBaseWidth,stroke.points[i].y*scratchBaseHeight);
+    ctx.stroke();ctx.restore();
+  });
+  const label=document.getElementById('scratch-zoom-label');if(label)label.textContent=Math.round(scratchZoom*100)+'%';
+}
 
 function render() {
   const app = document.getElementById('app');
@@ -1393,7 +2213,7 @@ function render() {
   else if (currentScreen === 'topics-menu') {
     const grouped = new Map();
     questions.forEach(q => {
-      const topic = getTopicLabel(q.category);
+      const topic = getTopicForQuestion(q);
       if (!grouped.has(topic)) grouped.set(topic, new Map());
       const skills = grouped.get(topic);
       const key = q.skillId || 'general';
@@ -1423,7 +2243,7 @@ function render() {
     const errorQuestions = questions.filter(q => errorIds.includes(String(q.id)));
     const groups = new Map();
     errorQuestions.forEach(q => {
-      const topic = getTopicLabel(q.category);
+      const topic = getTopicForQuestion(q);
       if (!groups.has(topic)) groups.set(topic, new Map());
       const skills = groups.get(topic);
       const skill = q.skillId || 'general';
@@ -1463,6 +2283,72 @@ function render() {
     MARK_RANGES.forEach(r => {
       rows += `<div class="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2"><span class="text-sm font-semibold text-slate-800">Отметка ${r.mark}</span><span class="text-sm text-slate-600">${r.table} баллов</span></div>`;
     });
+    const tabs = `
+      <div class="grid grid-cols-2 gap-2 rounded-xl bg-slate-100 p-1">
+        <button onclick="setMaterialsTab('score')" class="rounded-lg px-3 py-2.5 text-sm font-bold transition ${materialsTab === 'score' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'}">Баллы</button>
+        <button onclick="setMaterialsTab('tips')" class="rounded-lg px-3 py-2.5 text-sm font-bold transition ${materialsTab === 'tips' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'}">Лайфхаки</button>
+      </div>`;
+    const tips = [
+      { title:'Параллельные прямые', tag:'Функции', topic:'Функции', body:`
+        <p>У прямой вида <strong>$y=kx+b$</strong> коэффициент $k$ отвечает за наклон, а $b$ показывает, где прямая пересекает вертикальную ось $y$.</p>
+        <p><strong>Чтобы две разные прямые были параллельны, нужны два условия:</strong></p>
+        <div class="tip-rule-row"><span class="tip-rule-label">1. Одинаковый коэффициент наклона</span><span class="shrink-0">$k_1=k_2$</span></div>
+        <div class="tip-rule-row"><span class="tip-rule-label">2. Разные свободные члены, иначе прямые совпадут</span><span class="shrink-0">$b_1≠b_2$</span></div>
+        <p><strong>Пример:</strong> $y=3x+1$ и $y=3x-7$ параллельны, потому что коэффициент при $x$ у обеих равен $3$. Прямая $y=4x+1$ им не параллельна: её коэффициент равен $4$.</p>
+      ` },
+      { title:'Чётность функции за две проверки', tag:'Функции', topic:'Функции', body:`1) Проверь, симметрична ли область определения относительно нуля. 2) Сравни $f(-x)$ с $f(x)$ и $-f(x)$. Если первое равно — функция чётная; если второе — нечётная. Пример: $f(x)=x^2$ чётная, $g(x)=x^3$ нечётная. Функция $x^2+x$ обычно не является ни той, ни другой.` },
+      { title:'Сумма и разность логарифмов', tag:'Логарифмы', topic:'Логарифмы', body:`При одинаковом основании сумма превращается в логарифм произведения, а разность — в логарифм частного: $\\log_a b+\\log_a c=\\log_a(bc),$ $\\log_a b-\\log_a c=\\log_a\\frac bc.$ Например, $\\log_2 5+\\log_2 9=\\log_2 45$ — не $\\log_2 14$ и не произведение двух логарифмов.` },
+      { title:'Почему синус равен нулю при x = −π', tag:'Тригонометрия', topic:'Тригонометрия', body:`Запомни: ось x — горизонтальная, ось y — вертикальная. На единичной окружности косинус — координата по x, а синус — координата по y.
+        <div class="unit-circle-demo">
+          <svg viewBox="0 0 260 180" role="img" aria-label="Единичная окружность: ось x горизонтальная, ось y вертикальная, точка с координатами минус один ноль">
+            <line x1="18" y1="84" x2="242" y2="84" stroke="#2563eb" stroke-width="1.8"/>
+            <line x1="130" y1="12" x2="130" y2="158" stroke="#2563eb" stroke-width="1.8"/>
+            <circle cx="130" cy="84" r="55" fill="#fff" stroke="#64748b" stroke-width="2"/>
+            <circle cx="75" cy="84" r="5" fill="#dc2626" stroke="#fff" stroke-width="1.5"/>
+            <text x="228" y="75" fill="#1d4ed8" font-size="12" font-weight="700">x</text>
+            <text x="138" y="19" fill="#1d4ed8" font-size="12" font-weight="700">y</text>
+            <text x="33" y="107" fill="#991b1b" font-size="12" font-weight="700">(-1; 0)</text>
+            <text x="136" y="101" fill="#475569" font-size="11">0</text>
+          </svg>
+          <div class="unit-circle-axis-note"><span>Ось x — горизонтальная</span><span>Ось y — вертикальная</span></div>
+        </div>
+        При $x=-\\pi$ точка находится в координатах $(-1,0)$: вертикальная координата равна нулю, поэтому $\\sin(-\\pi)=0$, но $\\cos(-\\pi)=-1$. В общем виде: $\\sin x=0$ при $x=\\pi k$. Для косинуса наоборот: $\\cos x=0$ при $x=\\frac\\pi2+\\pi k$.` },
+      { title:'Треугольники: три быстрых факта', tag:'Геометрия', topic:'Геометрия', body:`<p>Обозначения: $P$ — периметр (сумма длин всех сторон); $S$ — площадь; $h$ — высота; $a$ — сторона; $b$ — основание; $c$ — гипотенуза; $m$ — медиана. В задачах о конусе обычно $l$ или $L$ обозначает образующую.</p><div class="tip-geometry-legend"><span><strong>Равносторонний треугольник:</strong> $a=P/3$, где $a$ — сторона.</span><span><strong>Равнобедренный треугольник:</strong> если основание равно $b$, то боковая сторона $a=(P-b)/2$.</span><span><strong>Прямоугольный треугольник:</strong> медиана к гипотенузе $m=c/2$.</span></div><p>Эти формулы помогают быстро проверять утверждения без полного решения.</p>` },
+      { title:'Максимум одинаковых наборов', tag:'Делимость', topic:'Числа и делимость', body:`Если нужно разложить несколько количеств по одинаковым наборам без остатка, ищи НОД. Например, из $24$, $36$ и $60$ предметов можно сделать максимум $\\operatorname{НОД}(24,36,60)=12$ одинаковых наборов.` },
+      { title:'Деление с остатком', tag:'Числа', topic:'Числа и делимость', body:`<p>Главное правило: делимое — число, которое делим.</p><div class="tip-plain-formula"><span><strong>Делимое</strong> =</span><span><strong>делитель</strong> × <strong>неполное частное</strong></span><span>+</span><span class="formula-term"><strong>остаток</strong></span></div><p><strong>Пример:</strong> делитель — $7$, неполное частное — $12$, остаток — $3$. Тогда делимое: $7\\cdot12+3=87$.</p><p>Остаток всегда неотрицательный и строго меньше делителя: при делении на $7$ остаток может быть от $0$ до $6$.</p>` },
+      { title:'Чётный и нечётный корень', tag:'Корни', topic:'Корни', body:`Корень чётной степени из отрицательного числа не является действительным: $\\sqrt{-9}$ не имеет действительного значения. Корень нечётной степени определён и для отрицательных чисел: $\\sqrt[3]{-8}=-2$. Если корень стоит в знаменателе, знаменатель дополнительно не должен обращаться в ноль.` },
+      { title:'Признак делимости на 9', tag:'Числа', topic:'Числа и делимость', body:`Число делится на $9$ без остатка, если сумма его цифр делится на $9$. <p><strong>Пример:</strong> для числа $4635$ сумма цифр равна $4+6+3+5=18$. Число $18$ делится на $9$, значит, $4635$ тоже делится на $9$.</p><p>Если сумма цифр не делится на $9$, само число тоже не делится на $9$.</p>` },
+      { title:'Сумма кратных чисел в промежутке', tag:'Числа', topic:'Числа и делимость', body:`Сначала выпиши только кратные числа, которые строго больше нижней и строго меньше верхней границы. Например, кратные $9$ между $121$ и $152$: $126,135,144$. Их сумма равна $405$. Не включай сами границы, даже если одна из них кратна нужному числу.` }
+    ];
+    const tipTopics = [
+      { label: 'Все темы', value: 'all' },
+      { label: 'Функции', value: 'Функции' },
+      { label: 'Логарифмы', value: 'Логарифмы' },
+      { label: 'Тригонометрия', value: 'Тригонометрия' },
+      { label: 'Геометрия', value: 'Геометрия' },
+      { label: 'Числа и делимость', value: 'Числа и делимость' },
+      { label: 'Корни', value: 'Корни' }
+    ].filter(topic => topic.value === 'all' || tips.some(tip => tip.topic === topic.value));
+    const visibleTips = tips.filter(tip => selectedTipsTopic === 'all' || tip.topic === selectedTipsTopic);
+    const tipTopicButtons = `<div class="tip-topic-filters">${tipTopics.map(topic => `<button data-topic="${escapeHtml(topic.value)}" onclick="setTipsTopic(this.dataset.topic)" class="tip-topic-chip ${selectedTipsTopic === topic.value ? 'active' : ''}">${escapeHtml(topic.label)}</button>`).join('')}</div>`;
+    const tipsHtml = visibleTips.map((tip, i) => `
+      <article class="rounded-xl border border-slate-200 bg-white p-4 space-y-2">
+        <div class="flex items-center justify-between gap-3"><h3 class="font-bold text-slate-900">${i+1}. ${tip.title}</h3><span class="shrink-0 rounded-full bg-indigo-50 px-2.5 py-1 text-[11px] font-bold text-indigo-700">${tip.tag}</span></div>
+        <div class="tip-body">${tip.body}</div>
+      </article>`).join('');
+    const scorePanel = `
+      <section class="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4 space-y-3">
+        <h3 class="font-bold text-slate-900">Проверить тестовый балл</h3>
+        <p class="text-xs leading-5 text-slate-600">Введи результат по стобалльной шкале и посмотри справочную отметку. Проверь актуальность порогов по официальной таблице для своего экзаменационного года.</p>
+        <label class="block text-sm font-semibold text-slate-700" for="mark-input">Тестовый балл (0–100)</label>
+        <input id="mark-input" type="number" min="0" max="100" inputmode="numeric" placeholder="Например, 73" class="w-full border border-slate-300 rounded-xl px-4 py-3 text-lg font-semibold bg-white focus:outline-none focus:border-emerald-500" oninput="updateMarkPreview(this.value)">
+        <p class="text-sm font-bold text-emerald-800">Результат: <span id="mark-preview">—</span></p>
+      </section>
+      <details class="rounded-2xl border border-slate-200 bg-white p-4">
+        <summary class="cursor-pointer font-bold text-slate-800">Показать всю шкалу перевода баллов</summary>
+        <p class="text-xs text-slate-500 mt-3 mb-2">0 баллов — не аттестован. Остальные диапазоны — текущая справочная шкала тренажёра.</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">${rows}</div>
+      </details>`;
     app.innerHTML = `
       <div class="space-y-5">
         <div class="flex items-center gap-3">
@@ -1470,18 +2356,8 @@ function render() {
           <span class="menu-icon bg-violet-50 text-violet-700" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5.5A2.5 2.5 0 0 1 5.5 3H12v17H5.5A2.5 2.5 0 0 0 3 22zM12 3h6.5A2.5 2.5 0 0 1 21 5.5V22H12"/></svg></span>
           <h2 class="text-xl sm:text-2xl font-bold text-slate-900">Полезные материалы</h2>
         </div>
-        <section class="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4 space-y-3">
-          <h3 class="font-bold text-slate-900">Проверить тестовый балл</h3>
-          <p class="text-xs leading-5 text-slate-600">Введи результат по стобалльной шкале и посмотри соответствующую отметку.</p>
-          <label class="block text-sm font-semibold text-slate-700" for="mark-input">Тестовый балл (0–100)</label>
-          <input id="mark-input" type="number" min="0" max="100" inputmode="numeric" placeholder="Например, 73" class="w-full border border-slate-300 rounded-xl px-4 py-3 text-lg font-semibold bg-white focus:outline-none focus:border-emerald-500" oninput="updateMarkPreview(this.value)">
-          <p class="text-sm font-bold text-emerald-800">Результат: <span id="mark-preview">—</span></p>
-        </section>
-        <details class="rounded-2xl border border-slate-200 bg-white p-4">
-          <summary class="cursor-pointer font-bold text-slate-800">Показать всю шкалу перевода баллов</summary>
-          <p class="text-xs text-slate-500 mt-3 mb-2">0 баллов — не аттестован. Для остальных значений используется отображённая ниже шкала.</p>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">${rows}</div>
-        </details>
+        ${tabs}
+        ${materialsTab === 'score' ? scorePanel : `<div class="space-y-3"><p class="text-sm text-slate-600">Выбери тему, чтобы читать только подходящие подсказки.</p>${tipTopicButtons}${tipsHtml}</div>`}
       </div>`;
   }
 
@@ -1494,18 +2370,24 @@ function render() {
     let area = '';
     if (q.type === 'multi') {
       q.options.forEach((opt, idx) => {
-        area += `<button data-idx="${idx}" onclick="toggleMulti(${idx})" class="option-btn w-full text-left bg-white border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/40 p-4 sm:p-5 rounded-xl font-medium text-slate-800 shadow-sm flex items-start gap-3"><span class="option-label inline-flex shrink-0 items-center justify-center w-7 h-7 rounded-lg bg-slate-100 text-sm font-bold text-slate-500">${idx + 1}</span><div class="option-text pt-0.5 flex-1">${opt}</div></button>`;
+        area += `<button data-idx="${idx}" onclick="toggleMulti(${idx})" class="option-btn w-full text-left bg-white border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/40 p-4 sm:p-5 rounded-xl font-medium text-slate-800 shadow-sm flex items-start gap-3"><span class="option-label inline-flex shrink-0 items-center justify-center w-7 h-7 rounded-lg bg-slate-100 text-sm font-bold text-slate-500">${idx + 1}</span><div class="option-text pt-0.5 flex-1">${formatQuestionText(opt)}</div></button>`;
       });
       area += `<p class="text-xs text-slate-500">Выберите несколько пунктов, затем нажмите «Ответить». Задание части A засчитывается только при полном совпадении набора номеров.</p><button id="multi-submit" onclick="submitMulti()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3.5 px-6 rounded-xl shadow-md">Ответить</button>`;
     } else if (q.type === 'input') {
       area = `<input id="answer-input" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" class="w-full border border-slate-300 rounded-xl px-4 py-3 text-lg font-semibold text-slate-900 bg-white focus:outline-none focus:border-indigo-500" placeholder="Ваш ответ" onkeydown="if(event.key==='Enter'){submitInput();}"><p class="text-xs text-slate-500">Часть B: ответ запишите без пробелов и лишних символов — проверка посимвольная, иначе ответ не засчитается.</p><p id="input-correct-line" class="hidden text-sm font-semibold text-emerald-700"></p><button id="input-submit" onclick="submitInput()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3.5 px-6 rounded-xl shadow-md">Проверить</button>`;
     } else {
       q.options.forEach((opt, idx) => {
-        area += `<button data-idx="${idx}" onclick="answerQuestion(${idx})" class="option-btn w-full text-left bg-white border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/40 p-4 sm:p-5 rounded-xl font-medium text-slate-800 shadow-sm flex items-start gap-3"><span class="option-label inline-flex shrink-0 items-center justify-center w-7 h-7 rounded-lg bg-slate-100 text-sm font-bold text-slate-500">${labels[idx] || idx + 1}</span><div class="option-text pt-0.5 flex-1">${opt}</div></button>`;
+        area += `<button data-idx="${idx}" onclick="answerQuestion(${idx})" class="option-btn w-full text-left bg-white border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/40 p-4 sm:p-5 rounded-xl font-medium text-slate-800 shadow-sm flex items-start gap-3"><span class="option-label inline-flex shrink-0 items-center justify-center w-7 h-7 rounded-lg bg-slate-100 text-sm font-bold text-slate-500">${labels[idx] || idx + 1}</span><div class="option-text pt-0.5 flex-1">${formatQuestionText(opt)}</div></button>`;
       });
     }
     app.innerHTML = `
       <div class="space-y-6">
+        <div class="flex justify-end">
+          <button onclick="openScratchpad()" class="inline-flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-bold text-indigo-800 shadow-sm hover:bg-indigo-100">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-5 w-5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m14 5 5 5M4 20l4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20z"/></svg>
+            Черновик
+          </button>
+        </div>
         ${testMode === 'error' ? `<button onclick="exitErrorPractice()" class="w-full sm:w-auto text-slate-600 hover:text-slate-900 font-semibold text-sm flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100">${BACK_BTN}<span>Выйти из отработки</span></button>` : testKind === 'infinite' ? `<button onclick="finishInfinitePractice()" class="w-full sm:w-auto text-slate-600 hover:text-slate-900 font-semibold text-sm flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100"><span>Завершить практику</span><span class="text-xs text-slate-500">(<span id="infinite-answered-count">${infiniteAnsweredCount}</span> отвечено)</span></button>` : ''}
         <div class="space-y-2">
           <div class="flex justify-between text-xs font-semibold text-slate-500 items-center">
@@ -1518,12 +2400,11 @@ function render() {
           ${testKind !== 'infinite' ? `<div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden"><div class="bg-indigo-600 h-full transition-all duration-300" style="width:${pp}%"></div></div>` : ''}
         </div>
         ${q.year ? `<p class="text-[11px] font-bold uppercase tracking-wider text-indigo-500">${escapeHtml(sourceLabel(q))}</p>` : ''}
-        <div class="math-question font-semibold text-slate-900 bg-indigo-50/50 border border-indigo-100 rounded-xl p-4 sm:p-5">${q.questionText}</div>
+        <div class="math-question font-semibold text-slate-900 bg-indigo-50/50 border border-indigo-100 rounded-xl p-4 sm:p-5">${formatQuestionText(q.questionText)}</div>
         <div class="space-y-3">${area}</div>
-        <div id="solution-block" class="hidden min-w-0 max-w-full overflow-hidden bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
-          <p id="verdict-line" class="text-sm font-semibold"></p>
-          <p class="text-xs font-bold text-slate-700 uppercase tracking-wider">Подробное решение:</p>
-          <p class="solution-copy text-slate-700">${q.solution}</p>
+        <div id="solution-block" class="hidden answer-feedback">
+          <p id="verdict-line" class="answer-feedback-verdict"></p>
+          <div class="solution-copy answer-solution-copy">${getAnswerSolutionHtml(q)}</div>
         </div>
         <button id="next-btn" onclick="nextQuestion()" class="hidden w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3.5 px-6 rounded-xl shadow-md">Дальше</button>
       </div>`;
